@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="./shared/styles/tokens.css">
   <link rel="stylesheet" href="./shared/styles/global.css">
+  <link rel="stylesheet" href="./shared/styles/category-showcase.css">
 </head>
 <body>
   <script src="./shared/components/splash.js"></script>
@@ -47,10 +48,13 @@
       <a class="primary-btn" href="./login.html">Order shuru karein →</a>
       <img class="hb-art" src="./assets/brand/hero.jpg" alt="">
     </section>
-    <section>
-      <h2>Har tarah ki dukaan</h2>
-      <div class="categories" id="category-grid"></div>
-      <p id="category-message" aria-live="polite" style="color:var(--muted)"></p>
+    <section class="cx" id="category-showcase" aria-labelledby="cx-title">
+      <div class="cx-head">
+        <h2 id="cx-title">Explore Categories</h2>
+        <p>Find everything you need, all in one place.</p>
+      </div>
+      <div class="cx-rows"></div>
+      <p id="category-message" class="cx-msg" aria-live="polite"></p>
     </section>
     <section>
       <h2>Kaise kaam karta hai?</h2>

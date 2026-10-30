@@ -45,15 +45,9 @@ h2 { font-size:1.15rem; margin:1.4em 0 .6em; } h3 { margin:.4em 0; }
 .primary-btn:active, button.category:active { transform:scale(.97); }
 button:disabled { opacity:.55; cursor:not-allowed; }
 
-/* Category tiles (home) */
-.categories { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
-.categories .category { min-height:96px; padding:12px 6px; display:grid; place-items:center; align-content:center; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  color:var(--text); text-align:center; box-shadow:var(--shadow); font-size:.76rem; line-height:1.2; }
-.cat-pic { width:60px; height:60px; border-radius:14px; object-fit:cover; display:block; background:var(--primary-soft); }
 .chip-pic { width:24px; height:24px; border-radius:50%; object-fit:cover; vertical-align:middle; margin:-2px 8px -2px -6px; }
 .eyebrow .pin { width:13px; height:13px; vertical-align:-2px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .step-n { display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--primary); color:#fff; font-size:.76rem; font-weight:700; }
-.categories .category:hover { border-color:var(--primary); }
 
 /* Generic .category = pill button (used for actions/chips) */
 .category { padding:10px 18px; background:var(--primary); color:#fff; border-radius:999px; font-size:.9rem; }
@@ -82,7 +76,7 @@ form { display:grid; gap:12px; } form br { display:none; }
 .auth-card img { width:64px; height:64px; border-radius:18px; } .auth-card form { text-align:left; } .auth-card a { color:var(--primary); font-weight:600; }
 
 footer { padding:24px 16px; color:var(--muted); text-align:center; font-size:.85rem; }
-@media (min-width:640px) { .categories { grid-template-columns:repeat(6,minmax(0,1fr)); } .hero { padding:44px; } .hero.banner { padding-right:44%; } }
+@media (min-width:640px) { .hero { padding:44px; } .hero.banner { padding-right:44%; } }
 
 /* Category filter chips: active state */
 #cat-chips .category.on { background:var(--primary); color:#fff; border-color:var(--primary); }
