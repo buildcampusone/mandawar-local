@@ -70,6 +70,7 @@
   <script type="module">
     import { requireRole, logOut } from "./shared/services/auth.js";
     import { mountShell } from "./shared/components/shell.js";
+    import { t } from "./shared/i18n/i18n.js";
     import { initBrowse } from "./modules/customer/browse.js";
     import { initAddress } from "./modules/customer/address.js";
     import { initCartView } from "./modules/customer/cart-view.js";
@@ -86,12 +87,12 @@
       const shell = mountShell({
         role: "customer", user, profile, initial: "home",
         items: [
-          { id: "home",    icon: "home",    label: "Dukaanein", short: "Home" },
-          { id: "cart",    icon: "cart",    label: "Mera Cart", short: "Cart" },
-          { id: "orders",  icon: "orders",  label: "Mere Orders", short: "Orders" },
-          { id: "address", icon: "address", label: "Mera Address" }
+          { id: "home",    icon: "home",    key: "navShops",   shortKey: "shHome" },
+          { id: "cart",    icon: "cart",    key: "navCart",    shortKey: "shCart" },
+          { id: "orders",  icon: "orders",  key: "navOrders",  shortKey: "shOrders" },
+          { id: "address", icon: "address", key: "navAddress" }
         ],
-        profileRows: () => [["Address", profile.address || "Abhi save nahi hai"]],
+        profileRows: () => [[t("address"), profile.address || t("notSaved")]],
         onLogout: async () => { await logOut(); location.href = "./login.html"; },
         onEnter: (id) => {
           if (id === "home") {

@@ -81,9 +81,9 @@
         initial: approved ? "orders" : "shop",
         locked: approved ? [] : ["orders", "products"], lockedTo: "shop",
         items: [
-          { id: "orders",   icon: "orders",   label: "Orders" },
-          { id: "products", icon: "products", label: "Mere Products", short: "Products" },
-          { id: "shop",     icon: "shop",     label: "Meri Dukaan", short: "Dukaan" }
+          { id: "orders",   icon: "orders",   key: "navShopOrders", shortKey: "shOrders" },
+          { id: "products", icon: "products", key: "navProducts", shortKey: "shProducts" },
+          { id: "shop",     icon: "shop",     key: "navMyShop",  shortKey: "shShop" }
         ],
         profileRows: () => shop ? [
           ["Dukaan", shop.name], ["Category", catFull(shop.category)],

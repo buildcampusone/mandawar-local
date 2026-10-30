@@ -45,8 +45,8 @@
       mountShell({
         role: "admin", user, profile, initial: "pending",
         items: [
-          { id: "pending", icon: "pending", label: "Pending Dukaanein", short: "Pending" },
-          { id: "shops",   icon: "shops",   label: "Sabhi Dukaanein", short: "Dukaanein" }
+          { id: "pending", icon: "pending", key: "navPending",  shortKey: "shPending" },
+          { id: "shops",   icon: "shops",   key: "navAllShops", shortKey: "shShops" }
         ],
         onLogout: async () => { await logOut(); location.href = "./login.html"; },
         onEnter: (id) => {

@@ -209,6 +209,20 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /feedback/{fid} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid','role','rating','comment','lang','createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role in ['customer','shopkeeper','admin']
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() <= 300
+        && request.resource.data.lang in ['hi','en']
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
