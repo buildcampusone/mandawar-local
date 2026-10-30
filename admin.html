@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#006B35">
+  <title>Admin · Mandawar</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="./shared/styles/tokens.css">
+  <link rel="stylesheet" href="./shared/styles/global.css">
+  <link rel="stylesheet" href="./shared/styles/shell.css">
+</head>
+<body>
+  <script src="./shared/components/splash.js"></script>
+  <header class="topbar">
+    <a class="brand" href="./"><img src="./assets/brand/mark.png" alt="Mandawar logo"><span class="brand-txt"><span class="brand-name">Mandawar</span><small>Your Local Marketplace</small></span></a>
+  </header>
+  <main class="container">
+    <section class="hero" data-panel="pending shops">
+      <h1 id="welcome">Loading...</h1>
+      <p id="hero-sub">Dukaanein approve ya reject karein.</p>
+    </section>
+    <section data-panel="pending">
+      <h2>Pending dukaanein</h2>
+      <div id="pending-list"></div>
+    </section>
+    <section data-panel="shops">
+      <h2>Sabhi dukaanein</h2>
+      <div id="all-list"></div>
+    </section>
+  </main>
+  <script type="module">
+    import { requireRole, logOut } from "./shared/services/auth.js";
+    import { mountShell } from "./shared/components/shell.js";
+    import { loadPendingShops, loadAllShops } from "./modules/admin/shops.js";
+    const $ = (id) => document.getElementById(id);
+
+    requireRole("admin", (user, profile) => {
+      $("welcome").textContent = "Admin: " + profile.name;
+      mountShell({
+        role: "admin", user, profile, initial: "pending",
+        items: [
+          { id: "pending", icon: "pending", label: "Pending Dukaanein", short: "Pending" },
+          { id: "shops",   icon: "shops",   label: "Sabhi Dukaanein", short: "Dukaanein" }
+        ],
+        onLogout: async () => { await logOut(); location.href = "./login.html"; },
+        onEnter: (id) => {
+          if (id === "pending") loadPendingShops($("pending-list"));
+          if (id === "shops") loadAllShops($("all-list"));
+        }
+      });
+    });
+  </script>
+</body>
+</html>

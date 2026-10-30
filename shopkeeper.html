@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#006B35">
+  <title>Shopkeeper · Mandawar</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="./shared/styles/tokens.css">
+  <link rel="stylesheet" href="./shared/styles/global.css">
+  <link rel="stylesheet" href="./shared/styles/shell.css">
+</head>
+<body>
+  <script src="./shared/components/splash.js"></script>
+  <header class="topbar">
+    <a class="brand" href="./"><img src="./assets/brand/mark.png" alt="Mandawar logo"><span class="brand-txt"><span class="brand-name">Mandawar</span><small>Your Local Marketplace</small></span></a>
+  </header>
+  <main class="container">
+    <section class="hero" data-panel="orders products shop">
+      <h1 id="welcome">Loading...</h1>
+      <p>Aapki dukaan ka dashboard.</p>
+    </section>
+
+    <p id="shop-status" data-panel="shop" hidden></p>
+
+    <form id="shop-form" data-panel="shop" style="max-width:420px" hidden>
+      <h2>Apni dukaan register karein</h2>
+      <input id="shop-name" placeholder="Dukaan ka naam" maxlength="60" required>
+      <textarea id="shop-address" placeholder="Pura pata (Mandawar)" rows="3" maxlength="200" required></textarea>
+      <select id="shop-category" required></select>
+      <input id="shop-phone" type="tel" placeholder="Mobile number" maxlength="14" required>
+      <p id="shop-msg"></p>
+      <button class="category" type="submit">Register karein</button>
+    </form>
+
+    <section id="orders-section" data-panel="orders" hidden>
+      <h2>Aaye hue orders</h2>
+      <div id="order-list"></div>
+    </section>
+
+    <section id="products-section" data-panel="products" hidden>
+      <h2>Mere products</h2>
+      <form id="product-form" style="max-width:420px">
+        <input id="p-name" placeholder="Product / item ka naam" maxlength="80" required>
+        <input id="p-price" type="number" step="0.01" min="0.01" placeholder="Price (Rs)" required>
+        <select id="p-unit"></select>
+        <input id="p-stock" type="number" step="1" min="0" placeholder="Stock" required>
+        <p id="product-msg"></p>
+        <button class="category" type="submit">Product jodein</button>
+      </form>
+      <div id="product-list"></div>
+    </section>
+  </main>
+  <script type="module">
+    import { requireRole, logOut } from "./shared/services/auth.js";
+    import { mountShell } from "./shared/components/shell.js";
+    import { CATEGORIES, UNITS, catFull } from "./shared/config/categories.js";
+    import { initShop } from "./modules/shopkeeper/shop-register.js";
+    import { initProducts } from "./modules/shopkeeper/products.js";
+    import { initOrders } from "./modules/shopkeeper/orders.js";
+    const $ = (id) => document.getElementById(id);
+    const STATUS = { pending: "Approval pending", approved: "Approved", rejected: "Reject hui" };
+
+    // dropdowns come from one shared list
+    CATEGORIES.forEach((c) => $("shop-category").add(new Option(c.icon + " " + c.en, c.id)));
+    UNITS.forEach((u) => $("p-unit").add(new Option(u, u)));
+
+    requireRole("shopkeeper", async (user, profile) => {
+      $("welcome").textContent = "Namaste, " + profile.name;
+      const shop = await initShop(user, profile);
+      const approved = !!shop && shop.status === "approved";
+      if (approved) { initProducts(user); initOrders(user); }
+
+      mountShell({
+        role: "shopkeeper", user, profile,
+        initial: approved ? "orders" : "shop",
+        locked: approved ? [] : ["orders", "products"], lockedTo: "shop",
+        items: [
+          { id: "orders",   icon: "orders",   label: "Orders" },
+          { id: "products", icon: "products", label: "Mere Products", short: "Products" },
+          { id: "shop",     icon: "shop",     label: "Meri Dukaan", short: "Dukaan" }
+        ],
+        profileRows: () => shop ? [
+          ["Dukaan", shop.name], ["Category", catFull(shop.category)],
+          ["Status", STATUS[shop.status] || shop.status], ["Pata", shop.address]
+        ] : [["Dukaan", "Abhi register nahi hui"]],
+        onLogout: async () => { await logOut(); location.href = "./login.html"; }
+      });
+    });
+  </script>
+</body>
+</html>

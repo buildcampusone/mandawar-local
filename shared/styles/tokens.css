@@ -1,0 +1,24 @@
+:root {
+  color-scheme: light dark;
+  /* ===== Mandawar brand colours (single source of truth) ===== */
+  --primary:#006B35;        /* Primary Green   */
+  --secondary:#008D49;      /* Secondary Green */
+  --fresh:#00A45B;          /* Fresh Green     */
+  --primary-soft:#EBF6EE;   /* Light Green     */
+  --background:#F7FAF7;
+  --surface:#FFFFFF;
+  --accent:#FFC83D;         /* Accent Yellow: badges / highlights only */
+  --text:#14251C;           /* Primary Text    */
+  --primary-dark:var(--primary);   /* alias kept for older rules */
+  --primary-light:var(--fresh);
+  --success:var(--primary); --danger:#D64545;
+  --border:#DCE9DF; --muted:#5E7266;
+  --radius:16px; --radius-sm:12px;
+  --shadow:0 6px 24px rgba(0,60,30,.08); --shadow-lg:0 14px 40px rgba(0,107,53,.22);
+  --grad:linear-gradient(135deg,#006B35 0%,#008D49 60%,#00A45B 100%);
+  font-family:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --background:#0A1510; --surface:#12201A; --border:#22372C; --text:#E8F3EC; --muted:#93A89B;
+    --primary:#00A45B; --primary-soft:#12301F; --shadow:0 6px 24px rgba(0,0,0,.45); }
+}
