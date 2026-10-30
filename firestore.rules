@@ -17,7 +17,11 @@ service cloud.firestore {
     }
 
     function validProduct(d) {
-      return d.keys().hasOnly(['name','price','unit','stock','active','createdAt','lastOrderId'])
+      return d.keys().hasOnly(['name','price','unit','stock','active','createdAt','lastOrderId','image'])
+        && (!('image' in d)
+            || (d.image is string
+                && d.image.size() <= 40000
+                && d.image.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')))
         && d.name is string
         && d.name.size() >= 2 && d.name.size() <= 80
         && d.price is number
@@ -205,6 +209,57 @@ service cloud.firestore {
             && resource.data.status == 'placed'
             && request.resource.data.status == 'cancelled')
         );
+
+      allow delete: if false;
+    }
+
+    // ---- order reviews: reviews/{orderId} (one per order, written from modules/customer/rate-order.js)
+    // Step 1 (emoji) creates the doc with detailsDone=false; "Tell us More" fills the rest and sets
+    // detailsDone=true, after which it is locked. Shopkeepers can read reviews of their own shop.
+    function rOk(l, n) {
+      return l.size() <= n || (l[n] is int && l[n] >= 0 && l[n] <= 5);
+    }
+
+    function validReview(d) {
+      return d.keys().hasOnly(['orderId','customerUid','shopId','rating','tags','comment',
+                               'shopRating','itemRatings','detailsDone','createdAt'])
+        && d.rating is int && d.rating >= 1 && d.rating <= 5
+        && d.tags is list && d.tags.size() <= 5
+        && d.tags.hasOnly(['quality','speed','packaging','price','behaviour'])
+        && d.comment is string && d.comment.size() <= 300
+        && d.shopRating is int && d.shopRating >= 0 && d.shopRating <= 5
+        && d.itemRatings is list && d.itemRatings.size() <= 5
+        && rOk(d.itemRatings, 0) && rOk(d.itemRatings, 1) && rOk(d.itemRatings, 2)
+        && rOk(d.itemRatings, 3) && rOk(d.itemRatings, 4)
+        && d.detailsDone is bool;
+    }
+
+    match /reviews/{orderId} {
+      allow create: if isRole('customer')
+        && validReview(request.resource.data)
+        && request.resource.data.orderId == orderId
+        && request.resource.data.customerUid == request.auth.uid
+        && request.resource.data.detailsDone == false
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/orders/$(orderId))
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.customerUid == request.auth.uid
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.shopId == request.resource.data.shopId
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.status == 'delivered';
+
+      allow read: if signedIn()
+        && (resource.data.customerUid == request.auth.uid
+            || resource.data.shopId == request.auth.uid
+            || isRole('admin'));
+
+      allow update: if signedIn()
+        && resource.data.customerUid == request.auth.uid
+        && resource.data.detailsDone == false
+        && validReview(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['rating','tags','comment','shopRating','itemRatings','detailsDone'])
+        && (request.resource.data.itemRatings.size() == 0
+            || request.resource.data.itemRatings.size()
+               == get(/databases/$(database)/documents/orders/$(orderId)).data.items.size());
 
       allow delete: if false;
     }

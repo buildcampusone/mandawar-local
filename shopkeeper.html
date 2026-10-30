@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./shared/styles/tokens.css">
   <link rel="stylesheet" href="./shared/styles/global.css">
   <link rel="stylesheet" href="./shared/styles/shell.css">
+  <link rel="stylesheet" href="./shared/styles/orders.css">
 </head>
 <body>
   <script src="./shared/components/splash.js"></script>
@@ -50,6 +51,7 @@
         <input id="p-price" type="number" step="0.01" min="0.01" placeholder="Price (Rs)" required>
         <select id="p-unit"></select>
         <input id="p-stock" type="number" step="1" min="0" placeholder="Stock" required>
+        <label class="fld"><span>Product ki photo (optional)</span><input id="p-photo" type="file" accept="image/*"></label>
         <p id="product-msg"></p>
         <button class="category" type="submit">Product jodein</button>
       </form>
@@ -67,7 +69,7 @@
     const STATUS = { pending: "Approval pending", approved: "Approved", rejected: "Reject hui" };
 
     // dropdowns come from one shared list
-    CATEGORIES.forEach((c) => $("shop-category").add(new Option(c.icon + " " + c.en, c.id)));
+    CATEGORIES.forEach((c) => $("shop-category").add(new Option(c.en, c.id)));
     UNITS.forEach((u) => $("p-unit").add(new Option(u, u)));
 
     requireRole("shopkeeper", async (user, profile) => {

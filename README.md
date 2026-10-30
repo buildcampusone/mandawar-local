@@ -24,7 +24,7 @@ No live orders, authentication or payment processing is enabled yet.
 - `shared/config/categories.js` - ONE list of shop categories (login animation, filters, register form, home). If you add one, also add its id to `firestore.rules` (shops.create) and redeploy rules.
 - `shared/styles/tokens.css` - ONE green colour system for every page.
 - `shared/components/shell.js` + `shell.css` - sidebar + profile used by customer, shopkeeper and admin panels. Sections opt in with `data-panel="viewId"`.
-- `assets/categories/<id>.png` - optional images for the login animation tiles (see README there).
+- `assets/images/categories/*.webp` - real photo for each shop category (file name set per category in `categories.js` as `img`). Used on home tiles, filter chips and the login animation.
 
 ## Brand (official name: **Mandawar**, tagline: *Your Local Marketplace*)
 - Never use "Mandawar Local" or "Mandawar Mart". Brand strings live in `shared/config/brand.js` (JS) and are repeated in the static HTML heads/headers.

@@ -1,0 +1,91 @@
+/* Orders, ratings, thumbnails (customer + shopkeeper) */
+.thumb { display:inline-grid; place-items:center; width:56px; height:56px; flex:none; overflow:hidden; border-radius:12px; border:1px solid var(--border);
+  background:var(--primary-soft); font-weight:700; font-size:1.3rem; }
+.thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.thumb.sm { width:44px; height:44px; font-size:1.05rem; border-radius:10px; }
+.thumb.lg { width:72px; height:72px; font-size:1.6rem; }
+.thumb.more { background:var(--surface); color:var(--muted); font-size:.95rem; }
+
+/* tabs */
+.seg { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:6px 0 14px; background:var(--primary-soft); border-radius:14px; }
+.seg button { padding:10px; border:0; border-radius:10px; background:none; color:var(--muted); font:inherit; font-weight:600; cursor:pointer; }
+.seg button.on { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+
+/* order card */
+.oc { padding:14px; margin:12px 0; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+.oc-thumbs { display:flex; gap:8px; flex-wrap:wrap; }
+.oc-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; }
+.oc-main { min-width:0; }
+.oc-when { margin:0; font-weight:700; }
+.oc-id { margin:0; font-size:.85rem; color:var(--muted); overflow-wrap:anywhere; }
+.oc-shop { margin:0 0 8px; font-weight:600; color:var(--primary); }
+.oc-state { display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:.9rem; color:var(--primary); white-space:nowrap; }
+.oc-state svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.oc-state.bad { color:var(--danger); } .oc-state.warn { color:#9A6A00; }
+.oc hr { border:0; border-top:1px solid var(--border); margin:12px 0; }
+.oc-foot { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.oc-foot h4 { margin:0 0 6px; font-size:.9rem; }
+.oc .btn-soft { flex:none; padding:10px 22px; border:0; border-radius:12px; background:var(--primary-soft); color:var(--primary); font:inherit; font-weight:700; cursor:pointer; }
+.oc .btn-soft.danger { color:var(--danger); }
+.oc .btn-soft:active { transform:scale(.97); }
+.oc-link { padding:0; border:0; background:none; color:var(--primary); font:inherit; font-weight:600; text-decoration:underline dotted; cursor:pointer; }
+.oc-lines { margin:8px 0 0; padding:0; list-style:none; font-size:.88rem; color:var(--muted); }
+
+/* order card extras */
+.oc-shop + .oc-thumbs { margin-top:2px; }
+.oc-thumbs .thumb { width:64px; height:64px; }
+.oc-state svg { flex:none; }
+.oc > .oc-link { display:block; margin:10px 0 0; font-size:.85rem; }
+.oc-foot .btn-soft { margin-left:auto; }
+.oc-rate .emo-done { display:inline-block; vertical-align:middle; }
+.oc-rate .emo button { width:34px; height:34px; font-size:1.5rem; }
+.oc-lines li { margin:2px 0; }
+
+/* emoji rating */
+.emo { display:flex; gap:10px; }
+.emo button { width:38px; height:38px; display:grid; place-items:center; padding:0; border:0; border-radius:50%; background:none; font-size:1.7rem; line-height:1; cursor:pointer;
+  filter:grayscale(1); opacity:.7; transition:transform .12s, filter .12s, opacity .12s; }
+.emo button:hover, .emo button.on { filter:none; opacity:1; transform:scale(1.12); }
+.emo.big { justify-content:center; gap:12px; margin:6px 0 2px; }
+.emo.big button { width:52px; height:52px; font-size:2.4rem; }
+.emo-done { font-size:1.6rem; line-height:1; }
+
+/* rating sheet */
+.rt-who { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:4px; }
+.rt-h { margin:6px 0 0; text-align:center; font-weight:700; }
+.chips { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+.chip { padding:10px 16px; border:1.5px solid var(--border); border-radius:999px; background:var(--primary-soft); color:var(--text); font:inherit; font-weight:600; font-size:.9rem; cursor:pointer; }
+.chip.on { border-color:var(--primary); background:var(--primary); color:#fff; }
+.rt-line { display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px dashed var(--border); }
+.rt-line:first-child { border-top:0; }
+.rt-line > div { flex:1; min-width:0; }
+.rt-line b { display:block; font-weight:600; overflow-wrap:anywhere; }
+.rt-stars { display:flex; gap:2px; margin-top:2px; }
+.rt-stars button { width:34px; height:34px; display:grid; place-items:center; padding:0; border:0; background:none; color:var(--border); cursor:pointer; }
+.rt-stars svg { width:28px; height:28px; fill:currentColor; stroke:none; }
+.rt-stars button.on { color:#E8AE00; }
+
+/* product rows (browse / cart / shopkeeper) */
+.prow { display:flex; align-items:center; gap:12px; }
+.prow .pr-txt { flex:1; min-width:0; }
+.prow .pr-txt p { margin:2px 0; overflow-wrap:anywhere; }
+.pr-photo { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px; }
+.pr-photo input[type=file] { width:auto; padding:8px !important; font-size:.8rem; }
+
+/* shopkeeper rating chips */
+.rv { margin:8px 0 0; padding:8px 12px; border-radius:12px; background:var(--primary-soft); font-size:.9rem; }
+.rv b { margin-right:6px; }
+.rv-sum { margin:0 0 6px; font-weight:600; color:var(--primary); }
+
+/* emoji celebration when a 4-5 reaction is picked (rate-order.js) */
+.emo-burst { position:fixed; inset:0; z-index:70; overflow:hidden; pointer-events:none; }
+.emo-burst span { position:absolute; bottom:-3rem; left:var(--x); font-size:var(--s); line-height:1; opacity:0; animation:emo-rise 1.5s ease-out forwards; }
+@keyframes emo-rise {
+  0% { transform:translateY(0) scale(.6); opacity:0; }
+  15% { opacity:1; }
+  100% { transform:translateY(-75vh) scale(1.2) rotate(10deg); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce) { .emo-burst { display:none; } }
+
+/* product rows with a photo (browse / cart) */
+.prow .thumb { width:64px; height:64px; }

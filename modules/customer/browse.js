@@ -4,10 +4,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 import { addItem } from "./cart.js";
+import { thumb } from "../../shared/components/thumb.js";
 
-import { CATEGORIES, catLabel } from "../../shared/config/categories.js";
+import { CATEGORIES, catLabel, catImg } from "../../shared/config/categories.js";
 
-const CHIPS = [{ id: "all", icon: "✨", en: "Sab" }, ...CATEGORIES];
+const CHIPS = [{ id: "all", en: "Sab" }, ...CATEGORIES];
 const $ = (id) => document.getElementById(id);
 
 export async function initBrowse() {
@@ -21,7 +22,8 @@ export async function initBrowse() {
     const b = document.createElement("button");
     b.className = "category";
     b.type = "button";
-    b.textContent = c.icon + " " + c.en;
+    if (c.img) b.appendChild(catImg(c, "chip-pic"));
+    b.appendChild(document.createTextNode(c.en));
     b.onclick = () => {
       cat = c.id;
       chips.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
@@ -82,10 +84,15 @@ export async function initBrowse() {
     found.forEach((p) => {
       const box = document.createElement("div");
       box.className = "shop-card";
+      const row = document.createElement("div");
+      row.className = "prow";
+      row.appendChild(thumb(p));
+      const txt = document.createElement("div");
+      txt.className = "pr-txt";
       const t = document.createElement("p");
       t.textContent = p.name + " | Rs " + p.price + "/" + p.unit +
         (p.stock > 0 ? "" : " | Stock khatam");
-      box.appendChild(t);
+      txt.appendChild(t);
       if (p.stock > 0) {
         const q = document.createElement("input");
         q.type = "number"; q.min = "1"; q.max = "20"; q.value = "1";
@@ -97,9 +104,11 @@ export async function initBrowse() {
           const r = addItem(currentShop.id, p.id, q.value);
           alert(r || "Cart mein jod diya.");
         };
-        box.appendChild(q);
-        box.appendChild(a);
+        txt.appendChild(q);
+        txt.appendChild(a);
       }
+      row.appendChild(txt);
+      box.appendChild(row);
       list.appendChild(box);
     });
   }

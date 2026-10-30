@@ -49,7 +49,10 @@ button:disabled { opacity:.55; cursor:not-allowed; }
 .categories { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
 .categories .category { min-height:96px; padding:12px 6px; display:grid; place-items:center; align-content:center; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
   color:var(--text); text-align:center; box-shadow:var(--shadow); font-size:.76rem; line-height:1.2; }
-.cat-ico { font-size:2rem; line-height:1; }
+.cat-pic { width:60px; height:60px; border-radius:14px; object-fit:cover; display:block; background:var(--primary-soft); }
+.chip-pic { width:24px; height:24px; border-radius:50%; object-fit:cover; vertical-align:middle; margin:-2px 8px -2px -6px; }
+.eyebrow .pin { width:13px; height:13px; vertical-align:-2px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.step-n { display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:var(--primary); color:#fff; font-size:.76rem; font-weight:700; }
 .categories .category:hover { border-color:var(--primary); }
 
 /* Generic .category = pill button (used for actions/chips) */

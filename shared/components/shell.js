@@ -55,6 +55,53 @@ function el(tag, cls, text) {
 }
 const initial = (name) => (name || "?").trim().charAt(0).toUpperCase();
 
+// ------------------------------------------------------------------ bottom sheets
+let closeSheet = null;
+export function openSheet(title, build) {
+  closeSheet?.();
+  const back = el("div", "sheet-back");
+  const sh = el("div", "sheet");
+  sh.setAttribute("role", "dialog");
+  sh.setAttribute("aria-modal", "true");
+  sh.setAttribute("aria-label", title);
+  const hd = el("div", "sheet-head");
+  hd.appendChild(el("h3", "", title));
+  const x = el("button", "sheet-x");
+  x.type = "button";
+  x.setAttribute("aria-label", t("close"));
+  x.appendChild(svg("close"));
+  hd.appendChild(x);
+  const body = el("div", "sheet-body");
+  sh.append(hd, body);
+  back.appendChild(sh);
+  document.body.appendChild(back);
+  document.body.classList.add("no-scroll");
+
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  function close() {
+    document.removeEventListener("keydown", onKey);
+    back.remove();
+    document.body.classList.remove("no-scroll");
+    if (closeSheet === close) closeSheet = null;
+  }
+  closeSheet = close;
+  x.onclick = close;
+  back.onclick = (e) => { if (e.target === back) close(); };
+  document.addEventListener("keydown", onKey);
+  build(body, close);
+  requestAnimationFrame(() => back.classList.add("show"));
+}
+export const msgLine = () => { const m = el("p", "sheet-msg"); m.setAttribute("role", "status"); return m; };
+export const setMsg = (m, text, bad) => { m.textContent = text; m.classList.toggle("bad", !!bad); };
+export const field = (labelText, input) => {
+  const l = el("label", "fld");
+  l.appendChild(el("span", "", labelText));
+  l.appendChild(input);
+  return l;
+};
+export const btn = (text, cls = "category") => { const b = el("button", cls + " sheet-btn", text); b.type = "button"; return b; };
+
+
 /**
  * mountShell({
  *   role, user, profile,
@@ -167,52 +214,6 @@ export function mountShell(cfg) {
   scrim.onclick = () => setOpen(false);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
   window.addEventListener("resize", () => { if (window.innerWidth >= 900) setOpen(false); });
-
-  // ------------------------------------------------------------------ bottom sheets
-  let closeSheet = null;
-  function openSheet(title, build) {
-    closeSheet?.();
-    const back = el("div", "sheet-back");
-    const sh = el("div", "sheet");
-    sh.setAttribute("role", "dialog");
-    sh.setAttribute("aria-modal", "true");
-    sh.setAttribute("aria-label", title);
-    const hd = el("div", "sheet-head");
-    hd.appendChild(el("h3", "", title));
-    const x = el("button", "sheet-x");
-    x.type = "button";
-    x.setAttribute("aria-label", t("close"));
-    x.appendChild(svg("close"));
-    hd.appendChild(x);
-    const body = el("div", "sheet-body");
-    sh.append(hd, body);
-    back.appendChild(sh);
-    document.body.appendChild(back);
-    document.body.classList.add("no-scroll");
-
-    const onKey = (e) => { if (e.key === "Escape") close(); };
-    function close() {
-      document.removeEventListener("keydown", onKey);
-      back.remove();
-      document.body.classList.remove("no-scroll");
-      if (closeSheet === close) closeSheet = null;
-    }
-    closeSheet = close;
-    x.onclick = close;
-    back.onclick = (e) => { if (e.target === back) close(); };
-    document.addEventListener("keydown", onKey);
-    build(body, close);
-    requestAnimationFrame(() => back.classList.add("show"));
-  }
-  const msgLine = () => { const m = el("p", "sheet-msg"); m.setAttribute("role", "status"); return m; };
-  const setMsg = (m, text, bad) => { m.textContent = text; m.classList.toggle("bad", !!bad); };
-  const field = (labelText, input) => {
-    const l = el("label", "fld");
-    l.appendChild(el("span", "", labelText));
-    l.appendChild(input);
-    return l;
-  };
-  const btn = (text, cls = "category") => { const b = el("button", cls + " sheet-btn", text); b.type = "button"; return b; };
 
   // --- Choose App Language
   function openLang() {

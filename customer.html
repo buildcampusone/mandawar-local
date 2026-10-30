@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./shared/styles/tokens.css">
   <link rel="stylesheet" href="./shared/styles/global.css">
   <link rel="stylesheet" href="./shared/styles/shell.css">
+  <link rel="stylesheet" href="./shared/styles/orders.css">
 </head>
 <body>
   <script src="./shared/components/splash.js"></script>
@@ -82,7 +83,7 @@
       initAddress(user, profile);
       initCartView(user, profile);
       initBrowse();
-      const refreshOrders = initMyOrders(user);
+      const refreshOrders = initMyOrders(user, { onReorder: () => shell.go("cart") });
 
       const shell = mountShell({
         role: "customer", user, profile, initial: "home",

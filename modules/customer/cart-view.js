@@ -4,6 +4,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getCart, setQty, removeItem } from "./cart.js";
 import { placeOrder } from "./checkout.js";
+import { thumb } from "../../shared/components/thumb.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -45,10 +46,15 @@ export function initCartView(user, profile) {
         } else {
           const p = snap.data();
           total += p.price * it.qty;
-          box.appendChild(mk("p", p.name + " | Rs " + p.price + "/" + p.unit +
+          const prow = mk("div", "", "prow");
+          prow.appendChild(thumb(p));
+          const ptxt = mk("div", "", "pr-txt");
+          box.appendChild(prow);
+          prow.appendChild(ptxt);
+          ptxt.appendChild(mk("p", p.name + " | Rs " + p.price + "/" + p.unit +
             " x " + it.qty + " = Rs " + (p.price * it.qty).toFixed(2)));
           if (it.qty > p.stock)
-            box.appendChild(mk("p", "Stock sirf " + p.stock + " bacha hai.")).style.color = "var(--danger)";
+            ptxt.appendChild(mk("p", "Stock sirf " + p.stock + " bacha hai.")).style.color = "var(--danger)";
           const q = mk("input");
           q.type = "number"; q.min = "1"; q.max = "20"; q.value = it.qty;
           q.style.cssText = "width:70px;padding:8px;margin-right:8px";
@@ -56,7 +62,7 @@ export function initCartView(user, profile) {
             if (!setQty(it.productId, q.value)) alert("Quantity 1 se 20 ke beech poora number ho.");
             render();
           };
-          box.appendChild(q);
+          ptxt.appendChild(q);
         }
         const r = mk("button", "Hatayein", "category");
         r.onclick = () => { removeItem(it.productId); render(); };

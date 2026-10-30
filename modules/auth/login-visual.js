@@ -1,12 +1,11 @@
 import { applyLang, toggleLang, getLang } from "./i18n.js";
-import { CATEGORIES, CAT_BY_ID } from "../../shared/config/categories.js";
+import { CATEGORIES, CAT_BY_ID, catImg } from "../../shared/config/categories.js";
 
 /* ---------- Shop-category marquee ----------
    Every kind of local shop (not just grocery) - list lives in shared/config/categories.js.
-   Optional image per category: assets/categories/<id>.png (emoji is the fallback). */
+   Each tile shows the category photo from assets/images/categories/ (see categories.js). */
 const ROWS = 9;          // diagonal rows
 const PER_ROW = 9;       // tiles per row (row is duplicated so the -50% loop is seamless)
-const hasImg = {};       // id -> true once its png loaded
 
 function labelOf(c) { return getLang() === "hi" ? c.hi : c.en; }
 
@@ -14,24 +13,13 @@ function tile(c) {
   const d = document.createElement("div");
   d.className = "tile";
   d.dataset.cat = c.id;
-  const emo = document.createElement("span");
-  emo.className = "emo";
-  emo.textContent = c.icon;
+  const pic = catImg(c, "pic");
   const lbl = document.createElement("span");
   lbl.className = "lbl";
   lbl.textContent = labelOf(c);
-  d.append(emo, lbl);
-  if (hasImg[c.id]) useImage(d, c.id);
+  d.append(pic, lbl);
   return d;
 }
-function useImage(tileEl, id) {
-  const emo = tileEl.querySelector(".emo");
-  if (!emo) return;
-  const img = new Image();
-  img.alt = ""; img.className = "pic"; img.src = `./assets/categories/${id}.png`;
-  emo.replaceWith(img);
-}
-
 function buildStage() {
   const stage = document.getElementById("stage");
   const n = CATEGORIES.length;
@@ -47,16 +35,6 @@ function buildStage() {
   }
 }
 buildStage();
-
-// probe optional images once; swap them in only for categories that have one
-CATEGORIES.forEach((c) => {
-  const probe = new Image();
-  probe.onload = () => {
-    hasImg[c.id] = true;
-    document.querySelectorAll(`.tile[data-cat="${c.id}"]`).forEach((t) => useImage(t, c.id));
-  };
-  probe.src = `./assets/categories/${c.id}.png`;
-});
 
 // labels follow the language pill
 document.addEventListener("langchange", () => {

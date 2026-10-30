@@ -3,6 +3,8 @@ import {
   collection, addDoc, getDocs, doc, updateDoc,
   query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { photoToDataUrl } from "../../shared/services/image.js";
+import { thumb } from "../../shared/components/thumb.js";
 
 export function initProducts(user) {
   const sec = document.getElementById("products-section");
@@ -27,10 +29,15 @@ export function initProducts(user) {
   function row(id, p) {
     const box = document.createElement("div");
     box.className = "shop-card";
+    const top = document.createElement("div");
+    top.className = "prow";
+    top.appendChild(thumb(p));
     const info = document.createElement("p");
+    info.className = "pr-txt";
     info.textContent = p.name + " | Rs " + p.price + "/" + p.unit +
       " | Stock: " + p.stock + " | " + (p.active ? "Active" : "Inactive");
-    box.appendChild(info);
+    top.appendChild(info);
+    box.appendChild(top);
     box.appendChild(btn("Stock badlo", async () => {
       const v = prompt("Naya stock (poora number):", p.stock);
       if (v === null) return;
@@ -45,6 +52,15 @@ export function initProducts(user) {
       if (!(n > 0)) return alert("Price 0 se zyada honi chahiye.");
       await save(id, { price: n });
     }));
+    const pick = document.createElement("input");
+    pick.type = "file"; pick.accept = "image/*"; pick.hidden = true;
+    pick.onchange = async () => {
+      if (!pick.files[0]) return;
+      try { await save(id, { image: await photoToDataUrl(pick.files[0]) }); }
+      catch (e) { alert(e.message); }
+    };
+    box.appendChild(pick);
+    box.appendChild(btn(p.image ? "Photo badlo" : "Photo jodein", () => pick.click()));
     box.appendChild(btn(p.active ? "Inactive karein" : "Active karein",
       () => save(id, { active: !p.active })));
     return box;
@@ -82,7 +98,10 @@ export function initProducts(user) {
     const b = form.querySelector("button");
     b.disabled = true;
     try {
-      await addDoc(col, { name, price, unit, stock, active: true, createdAt: serverTimestamp() });
+      const doc1 = { name, price, unit, stock, active: true, createdAt: serverTimestamp() };
+      const file = document.getElementById("p-photo").files[0];
+      if (file) doc1.image = await photoToDataUrl(file);
+      await addDoc(col, doc1);
       form.reset();
       refresh();
     } catch (e) {

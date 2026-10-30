@@ -59,3 +59,15 @@ export function removeItem(productId) {
   c.items = c.items.filter((i) => i.productId !== productId);
   save(c);
 }
+
+// Reorder: replace the whole cart with items from an earlier order (caller has already checked availability).
+export function replaceCart(shopId, items) {
+  const clean = [];
+  for (const i of items) {
+    const qty = Math.min(MAX_QTY, Math.max(1, Math.floor(Number(i.qty)) || 1));
+    if (i.productId && !clean.some((c) => c.productId === i.productId)) clean.push({ productId: i.productId, qty });
+    if (clean.length >= MAX_ITEMS) break;
+  }
+  save({ shopId: clean.length ? shopId : null, items: clean });
+  return clean.length;
+}
