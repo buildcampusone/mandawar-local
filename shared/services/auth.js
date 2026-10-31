@@ -3,7 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  RecaptchaVerifier, linkWithPhoneNumber, signInWithPhoneNumber,
+  sendEmailVerification, sendPasswordResetEmail, reload,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -11,11 +11,11 @@ import {
   doc, setDoc, getDoc, serverTimestamp, terminate, clearIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-import { isPhone, toE164, fromE164 } from "./phone-core.js";
+import { isPhone, fromE164 } from "./phone-core.js";
 export { isPhone, fromE164 };
 
-// Step 1 of email signup: only the login account. The profile (users/{uid}) is written AFTER the phone OTP is
-// confirmed, because firestore.rules require the token's phone_number to match the profile phone.
+// E-mail signup: the login account first, then createProfile (users/{uid}), then a verification e-mail.
+// No SMS / OTP anywhere: the mobile number is contact information for delivery only.
 export const createAccount = async (email, password) =>
   (await createUserWithEmailAndPassword(auth, email, password)).user;
 
@@ -45,40 +45,19 @@ export async function finishRedirect() {
   return r ? r.user : null;
 }
 
-// ---- Phone OTP (Firebase Phone Auth + invisible reCAPTCHA) ----
-let verifier = null;
-export function resetRecaptcha() {
-  try { verifier && verifier.clear(); } catch (e) { /* already gone */ }
-  verifier = null;
-}
-function freshVerifier() {
-  resetRecaptcha();
-  let box = document.getElementById("recaptcha-box");
-  if (!box) { box = document.createElement("div"); box.id = "recaptcha-box"; document.body.appendChild(box); }
-  box.textContent = "";
-  verifier = new RecaptchaVerifier(auth, box, { size: "invisible" });
-  return verifier;
-}
+// ---- E-mail verification ----
+// Verified = Google account, a clicked e-mail link, or an older account that once verified its phone by OTP.
+export const isVerified = (user) => !!user && (user.emailVerified === true || !!user.phoneNumber);
+export const sendVerification = (user) => sendEmailVerification(user);
 
-// link = true  -> attach the number to the CURRENT account (signup / profile completion / "verify my number").
-// link = false -> sign in with the number (an account that already has this number is signed into).
-export async function sendOtp({ phone, link }) {
-  if (!isPhone(phone)) { const e = new Error("bad phone"); e.code = "app/bad-phone"; throw e; }
-  const v = freshVerifier();
-  try {
-    return link && auth.currentUser
-      ? await linkWithPhoneNumber(auth.currentUser, toE164(phone), v)
-      : await signInWithPhoneNumber(auth, toE164(phone), v);
-  } catch (e) { resetRecaptcha(); throw e; }
+// Re-read the account from Firebase and refresh the ID token: the email_verified claim that firestore.rules check
+// only appears in a token issued AFTER the link was clicked.
+export async function refreshVerification(user) {
+  await reload(user);
+  if (user.emailVerified) await user.getIdToken(true);
+  return isVerified(user);
 }
-
-// Confirm the SMS code, then refresh the ID token: the phone_number claim that firestore.rules check only
-// appears in a token issued AFTER the phone was attached.
-export async function confirmOtp(confirmation, code) {
-  const cred = await confirmation.confirm(code);
-  await cred.user.getIdToken(true);
-  return cred.user;
-}
+export const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 
 export const logIn = (email, password) =>
   signInWithEmailAndPassword(auth, email, password);
@@ -108,9 +87,10 @@ export function requireRole(allowedRole, onReady) {
     if (!profile || profile.role !== allowedRole) {
       return (location.href = dashboardFor(profile?.role));
     }
+    // Customers and shopkeepers must verify their e-mail first; the login page shows the "check your mail" screen.
+    if ((allowedRole === "customer" || allowedRole === "shopkeeper") && !isVerified(user)) {
+      return (location.href = "./login.html");
+    }
     onReady(user, profile);
-    // Accounts made before OTP existed have no verified number yet: show a "verify" banner (customers and shops only).
-    if (allowedRole === "customer" || allowedRole === "shopkeeper")
-      import("../components/verify-phone.js").then((m) => m.mountVerifyBanner(user, profile)).catch(() => {});
   });
 }

@@ -86,32 +86,18 @@
         <button class="cta" type="submit" id="submit" disabled data-i18n="cont">आगे बढ़ें</button>
       </form>
 
-        <a href="#" id="phone-login-link" class="alt" data-i18n="phoneLogin">मोबाइल OTP से लॉगिन करें</a>
+        <a href="#" id="forgot-link" class="alt" data-i18n="forgot">Forgot password?</a>
         <a href="#" id="toggle" class="alt alt2" data-i18n="newAcc">नया अकाउंट बनाएं</a>
       </section>
 
-      <section id="v-phone" hidden>
-        <h1 data-i18n="plTitle">मोबाइल से लॉगिन</h1>
-        <p class="sub" data-i18n="plSub">अपने 10 अंकों के नंबर पर OTP पाएं</p>
+      <section id="v-verify" hidden>
+        <h1 data-i18n="vfTitle">Verify your email</h1>
+        <p class="sub" id="vf-to"></p>
         <div class="vform">
-          <label class="field"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg><span class="cc">+91</span>
-            <input id="pl-phone" data-i18n-ph="phone" placeholder="मोबाइल नंबर" inputmode="numeric" maxlength="10" autocomplete="tel-national" class="has-cc"></label>
-          <p class="vmsg" id="pl-msg" aria-live="polite"></p>
-          <button class="cta" type="button" id="pl-send" disabled data-i18n="sendOtp">OTP भेजें</button>
-          <a href="#" class="alt back" data-back data-i18n="backLogin">← वापस लॉगिन पर</a>
-        </div>
-      </section>
-
-      <section id="v-otp" hidden>
-        <h1 data-i18n="otpTitle">OTP डालें</h1>
-        <p class="sub" id="otp-to"></p>
-        <div class="vform">
-          <label class="field"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
-            <input id="otp-code" class="otp-input" data-i18n-ph="otpPh" placeholder="6 अंकों का OTP" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
-          <p class="vmsg" id="otp-msg" aria-live="polite"></p>
-          <button class="cta" type="button" id="otp-verify" disabled data-i18n="otpVerify">वेरिफ़ाई करें</button>
-          <button type="button" class="linkbtn" id="otp-resend" disabled></button>
-          <a href="#" class="alt back" id="otp-change" data-i18n="otpChange">नंबर बदलें</a>
+          <p class="vmsg" id="vf-msg" aria-live="polite"></p>
+          <button class="cta" type="button" id="vf-check" data-i18n="vfCheck">I have verified</button>
+          <button type="button" class="linkbtn" id="vf-resend"></button>
+          <a href="#" class="alt back" id="vf-out" data-i18n="vfLogout">Use another account</a>
         </div>
       </section>
 

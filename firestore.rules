@@ -33,12 +33,13 @@ service cloud.firestore {
     function minFor(shopId) {
       return shopDelivery(shopId).get('minimumOrderAmount', 0);
     }
-    // Phone is VERIFIED when the sign-in token carries a phone_number (set by Firebase after an SMS OTP).
-    function phoneVerified() {
-      return signedIn() && 'phone_number' in request.auth.token;
-    }
-    function ownsPhone(p10) {
-      return phoneVerified() && request.auth.token.phone_number == '+91' + p10;
+    // Identity check for money actions (placing an order, registering a shop): the account must have a VERIFIED e-mail
+    // (Google sign-in is verified by Google; e-mail+password after the verification link) - or, for older accounts, a phone
+    // number that was verified by SMS OTP in the past. The mobile number stored in users/shops/orders is only CONTACT
+    // information (nobody proves it belongs to the person), so rules only check its format.
+    function identityVerified() {
+      return signedIn()
+        && (request.auth.token.get('email_verified', false) == true || 'phone_number' in request.auth.token);
     }
     function profileOf(uid) {
       return get(/databases/$(database)/documents/users/$(uid)).data;
@@ -94,8 +95,7 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 60
         && request.resource.data.phone is string
-        && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
-        && ownsPhone(request.resource.data.phone);
+        && request.resource.data.phone.matches('^[6-9][0-9]{9}$');
 
       allow update: if request.auth != null
         && request.auth.uid == uid
@@ -105,7 +105,8 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['name','phone','role','status','createdAt','address'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 60
-        && (request.resource.data.phone == resource.data.phone || ownsPhone(request.resource.data.phone))
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
         && (!('address' in request.resource.data)
             || (request.resource.data.address is string
                 && request.resource.data.address.size() >= 5
@@ -114,7 +115,7 @@ service cloud.firestore {
 
     match /shops/{shopId} {
       allow create: if isRole('shopkeeper')
-        && phoneVerified()
+        && identityVerified()
         && request.auth.uid == shopId
         && request.resource.data.keys().hasOnly(
              ['ownerUid','name','address','category','phone','status','createdAt'])
@@ -228,7 +229,7 @@ service cloud.firestore {
 
     match /orders/{orderId} {
       allow create: if isRole('customer')
-        && phoneVerified()
+        && identityVerified()
         && request.resource.data.keys().hasOnly(
              ['customerUid','shopId','shopName','items','subtotal','deliveryFee','total','address','phone','paymentMethod','status','createdAt'])
         && request.resource.data.customerUid == request.auth.uid

@@ -3,7 +3,7 @@
 **Mandawar - Your Local Marketplace.** A mobile-first marketplace for every kind of local shop in Mandawar, Dausa, Rajasthan.
 
 ## Stack
-HTML5, CSS3, vanilla JavaScript ES Modules, Firebase (Auth + Phone OTP + Firestore + Cloud Functions + Hosting + FCM push).
+HTML5, CSS3, vanilla JavaScript ES Modules, Firebase (Auth: e-mail+password with e-mail verification and Google, no SMS + Firestore + Cloud Functions + Hosting + FCM push).
 
 ## Roles
 Customer, Shopkeeper, Delivery partner (rider), Admin (admin is created by hand in the Console: set `users/{uid}.role = "admin"`).

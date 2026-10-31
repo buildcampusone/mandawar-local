@@ -103,3 +103,17 @@ set field `role` to "admin" (rules block admin self-signup on purpose).
 3. **Commission**: Admin panel -> "Commission & Orders" -> set the rate. Until you do, commission is 0 %. When a shop pays you, press "Payment mila (settle)".
 4. **Abuse / cost safety (do these in the Console, code cannot do them)**: App Check (reCAPTCHA v3) -> paste the site key in `APP_CHECK_SITE_KEY`, run for a few days, then set `ENFORCE_APP_CHECK=1` in `functions/.env`; Authentication -> Settings -> SMS region policy = India only; set a billing budget alert; Google Cloud Console -> Credentials -> restrict the browser API key to your site's domain.
 5. CSP is still `Report-Only`. Watch the reports, then rename the header to `Content-Security-Policy` in `firebase.json`.
+
+
+## Step 12: Login 2.0 - e-mail + password, NO SMS OTP (new)
+What changed: mobile OTP login/signup is gone. Signup = name + mobile + role + e-mail + password -> a verification link is mailed -> the person taps it -> "I have verified" -> dashboard. Google login still works (Google already verified the address). "Forgot password?" sends a reset mail.
+1. Firebase Console -> Authentication -> Sign-in method: keep **Email/Password** and **Google** on. You may switch **Phone** off (nothing uses it now; no SMS cost).
+2. Authentication -> Settings -> Authorized domains: your hosting domain must be listed (verification / reset links use it).
+3. Authentication -> Templates: edit the "Email address verification" and "Password reset" mails (Hindi/English text, sender name "Mandawar"). Free on the Spark plan.
+4. Deploy rules + hosting: `firebase deploy --only firestore:rules,hosting`.
+5. Rules now require a verified e-mail for **placing an order** and **registering a shop** (`identityVerified()` in firestore.rules). Old accounts that verified their phone by OTP earlier still pass.
+6. The mobile number is contact information only (for delivery). It is NOT verified and two accounts can hold the same number, so when you make someone a rider (Admin -> Riders) check the name as well as the number.
+7. Rider and admin accounts made in the Console do not need e-mail verification.
+
+## IMPORTANT: Spark plan limits
+Cloud Functions cannot be deployed on the free Spark plan (Google requires Blaze). Login 2.0 itself needs no functions, but these features DO need them: stock restore when an order is cancelled, commission wallet/ledger, order flood guard, order expiry, push notifications, rider management, admin settlements/blocking. Blaze has a free monthly quota, so a small town usually pays Rs 0 - set a budget alert. Without Blaze: keep the app on Spark, skip `functions`, and accept that those features do not run.

@@ -7,7 +7,7 @@
 //    and bump VERSION when you want everyone's cache rebuilt.
 importScripts("./shared/services/sw-routes.js");
 
-const VERSION = "mandawar-v6";
+const VERSION = "mandawar-v7";
 const NAV_TIMEOUT_MS = 5000;   // slow network + cached page -> show the cached page
 const ASSET_TIMEOUT_MS = 8000;
 
@@ -52,7 +52,6 @@ const PRECACHE = [
   "./shared/components/splash.js",
   "./shared/components/thumb.js",
   "./shared/components/toast.js",
-  "./shared/components/verify-phone.js",
   "./shared/config/brand.js",
   "./shared/config/categories.js",
   "./shared/config/firebase.js",
@@ -65,7 +64,6 @@ const PRECACHE = [
   "./shared/services/nearby.js",
   "./shared/services/notify.js",
   "./shared/services/order-events.js",
-  "./shared/services/otp-guard.js",
   "./shared/services/phone-core.js",
   "./shared/services/push.js",
   "./shared/services/safe-area.js",

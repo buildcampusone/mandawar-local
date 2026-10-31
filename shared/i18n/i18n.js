@@ -24,9 +24,9 @@ const STRINGS = {
     // ---- OTP + Google login
     googleBtn: "Google से जारी रखें", phoneLogin: "मोबाइल OTP से लॉगिन करें", backLogin: "← वापस लॉगिन पर",
     plTitle: "मोबाइल से लॉगिन", plSub: "अपने 10 अंकों के नंबर पर OTP पाएं", sendOtp: "OTP भेजें",
-    otpTitle: "OTP डालें", otpSentTo: "6 अंकों का कोड {n} पर भेजा गया है।", otpPh: "6 अंकों का OTP", otpVerify: "वेरिफ़ाई करें",
+    otpTitle: "OTP डालें", vfTitle: "ईमेल verify करें", vfSub: "Verification link {email} पर भेजा गया है। ईमेल खोलकर link दबाएँ (Spam folder भी देखें), फिर नीचे बटन दबाएँ।", vfCheck: "मैंने verify कर लिया", vfResend: "Link दोबारा भेजें", vfResendIn: "दोबारा भेजें ({s}s)", vfSent: "Verification link भेज दिया गया है।", vfNotYet: "अभी ईमेल verify नहीं हुआ। ईमेल का link दबाकर फिर कोशिश करें।", vfLogout: "दूसरे account से login करें", forgot: "पासवर्ड भूल गए?", resetSent: "अगर यह ईमेल registered है तो password reset link भेज दिया गया है।", e_resetEmail: "पहले ऊपर अपना ईमेल डालें।", otpSentTo: "6 अंकों का कोड {n} पर भेजा गया है।", otpPh: "6 अंकों का OTP", otpVerify: "वेरिफ़ाई करें",
     otpSending: "OTP भेज रहे हैं...", otpResend: "दोबारा भेजें", otpResendIn: "{s} सेकंड में दोबारा भेज सकते हैं", otpChange: "नंबर बदलें",
-    prTitle: "प्रोफ़ाइल पूरी करें", prSub: "बस एक कदम बाकी है", prNeedPhone: "आपके मोबाइल नंबर पर OTP आएगा।", prFinish: "जारी रखें",
+    prTitle: "प्रोफ़ाइल पूरी करें", prSub: "बस एक कदम बाकी है", prNeedPhone: "डिलीवरी के लिए मोबाइल नंबर ज़रूरी है (इसका OTP नहीं आएगा)।", prFinish: "जारी रखें",
     vbText: "ऑर्डर और दुकान चलाने के लिए अपना मोबाइल नंबर वेरिफ़ाई करें।", vbBtn: "नंबर वेरिफ़ाई करें", vbTitle: "मोबाइल वेरिफ़ाई करें", vbDone: "नंबर वेरिफ़ाई हो गया।",
     needVerify: "ऑर्डर से पहले अपना मोबाइल नंबर वेरिफ़ाई करें (ऊपर पीला बैनर)।", phoneLocked: "नंबर बदलने के लिए OTP वेरिफ़िकेशन ज़रूरी है।",
     otpWait: "दोबारा भेजने के लिए {s} सेकंड रुकें।", otpPhoneLimit: "इस नंबर पर बहुत OTP भेजे जा चुके हैं। {m} मिनट बाद कोशिश करें।",
@@ -166,9 +166,9 @@ const STRINGS = {
     // ---- OTP + Google login
     googleBtn: "Continue with Google", phoneLogin: "Login with mobile OTP", backLogin: "← Back to login",
     plTitle: "Login with mobile", plSub: "Get an OTP on your 10-digit number", sendOtp: "Send OTP",
-    otpTitle: "Enter OTP", otpSentTo: "A 6-digit code was sent to {n}.", otpPh: "6-digit OTP", otpVerify: "Verify",
+    otpTitle: "Enter OTP", vfTitle: "Verify your email", vfSub: "A verification link was sent to {email}. Open your email, tap the link (check Spam too), then press the button below.", vfCheck: "I have verified", vfResend: "Resend link", vfResendIn: "Resend in {s}s", vfSent: "Verification link sent.", vfNotYet: "Email is not verified yet. Tap the link in your email and try again.", vfLogout: "Use another account", forgot: "Forgot password?", resetSent: "If this email is registered, a password reset link has been sent.", e_resetEmail: "Enter your email above first.", otpSentTo: "A 6-digit code was sent to {n}.", otpPh: "6-digit OTP", otpVerify: "Verify",
     otpSending: "Sending OTP...", otpResend: "Resend", otpResendIn: "You can resend in {s}s", otpChange: "Change number",
-    prTitle: "Complete your profile", prSub: "One last step", prNeedPhone: "We will send an OTP to your mobile number.", prFinish: "Continue",
+    prTitle: "Complete your profile", prSub: "One last step", prNeedPhone: "Your mobile number is needed for delivery (no OTP is sent).", prFinish: "Continue",
     vbText: "Verify your mobile number to place orders and run a shop.", vbBtn: "Verify number", vbTitle: "Verify mobile number", vbDone: "Number verified.",
     needVerify: "Verify your mobile number before ordering (yellow banner above).", phoneLocked: "Changing the number needs OTP verification.",
     otpWait: "Please wait {s}s before requesting another OTP.", otpPhoneLimit: "Too many OTPs sent to this number. Try again in {m} min.",
