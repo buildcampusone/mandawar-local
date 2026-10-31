@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <script src="./shared/services/safe-area.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#087A43">
+  <title>Customer · Mandawar Mart</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="./shared/styles/tokens.css">
+  <link rel="stylesheet" href="./shared/styles/global.css">
+  <link rel="stylesheet" href="./shared/styles/shell.css">
+  <link rel="stylesheet" href="./shared/styles/orders.css">
+  <link rel="stylesheet" href="./shared/styles/mart.css">
+</head>
+<body>
+  <script src="./shared/components/splash.js"></script>
+  <script type="module" src="./shared/services/pwa.js"></script>
+  <header class="topbar">
+    <a class="brand" href="./"><img src="./assets/brand/mark.png" alt="Mandawar Mart logo"><span class="brand-txt"><span class="brand-name">Mandawar Mart</span><small>Your Daily Grocery Store</small></span></a>
+    <button class="category" id="cart-btn" type="button">Cart</button>
+  </header>
+  <main class="container">
+    <section class="hero banner" data-panel="home">
+      <h1 id="welcome">Loading...</h1>
+      <p>Taaza grocery, seedha aapke ghar tak.</p>
+      <img class="hb-art" src="./assets/brand/hero.jpg" alt="">
+    </section>
+
+    <section id="shops-view" data-panel="home">
+      <div id="shop-list"></div>
+    </section>
+
+    <section id="products-view" data-panel="home" hidden>
+      <div class="mart-head">
+        <button class="mart-loc" id="loc-btn" type="button" aria-label="Delivery address badlein">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span>Deliver to <b id="loc-txt"></b></span><span aria-hidden="true">›</span>
+        </button>
+        <div class="mart-top">
+          <button class="mart-back" id="back-btn" type="button" aria-label="Wapas">‹</button>
+          <div class="mart-search" role="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="product-search" type="search" placeholder="Product dhoondein" aria-label="Product dhoondein" autocomplete="off">
+            <button class="mart-mic" id="mic-btn" type="button" aria-label="Bolkar dhoondein"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+          </div>
+        </div>
+        <h2 class="mart-title" id="shop-title"></h2>
+        <nav class="mart-nav" id="group-nav" aria-label="Product groups" hidden></nav>
+      </div>
+      <div id="product-list"></div>
+
+      <div class="mart-bar" id="mart-bar" hidden>
+        <button id="mart-cart" type="button"><span id="mart-bar-l"></span><span>View Cart ›</span></button>
+      </div>
+      <div class="mart-scrim" id="mart-scrim" hidden></div>
+      <section class="mart-sheet" id="mart-sheet" role="dialog" aria-modal="true" aria-labelledby="mart-sheet-title" hidden>
+        <div class="mart-sheet-h"><h3 id="mart-sheet-title"></h3><button id="mart-sheet-x" type="button" aria-label="Band karein">×</button></div>
+        <div class="mart-sheet-b" id="mart-sheet-body"></div>
+      </section>
+    </section>
+
+
+    <section id="cart-view" data-panel="cart" hidden>
+      <button class="category" id="cart-back" type="button">Wapas</button>
+      <h2>Mera cart</h2>
+      <div id="cart-list"></div>
+      <p id="cart-total" style="font-weight:600"></p>
+      <textarea id="order-address" rows="3" maxlength="200" placeholder="Delivery address"></textarea>
+      <input id="order-phone" type="tel" placeholder="Mobile number" style="margin:8px 0">
+      <p id="order-msg" style="margin:0 0 8px"></p>
+      <button class="category" id="order-btn" type="button">Order karein (COD)</button>
+    </section>
+
+    <section id="orders-section" data-panel="orders">
+      <h2>Mere orders</h2>
+      <div id="my-order-list"></div>
+    </section>
+
+    <section id="address-section" data-panel="address">
+      <h2>Mera address</h2>
+      <p id="address-saved"></p>
+      <form id="address-form" style="max-width:420px">
+        <textarea id="address-input" rows="3" maxlength="200" placeholder="Pura pata (Mandawar)" required></textarea>
+        <p id="address-msg"></p>
+        <button class="category" type="submit">Address save karein</button>
+      </form>
+    </section>
+  </main>
+  <script type="module">
+    import { requireRole, logOut } from "./shared/services/auth.js";
+    import { mountShell } from "./shared/components/shell.js";
+    import { t } from "./shared/i18n/i18n.js";
+    import { initBrowse } from "./modules/customer/browse.js";
+    import { initAddress } from "./modules/customer/address.js";
+    import { initCartView } from "./modules/customer/cart-view.js";
+    import { initMyOrders } from "./modules/customer/my-orders.js";
+    import { startOrderAlerts } from "./modules/customer/order-alerts.js";
+    import { notifyPrompt } from "./shared/services/notify.js";
+    const $ = (id) => document.getElementById(id);
+
+    requireRole("customer", (user, profile) => {
+      $("welcome").textContent = "Namaste, " + profile.name;
+      initAddress(user, profile);
+      initCartView(user, profile, { onPlaced: () => shell.go("orders") });
+      const browse = initBrowse(user, profile);
+      const refreshOrders = initMyOrders(user, { onReorder: () => shell.go("cart") });
+      $("orders-section").insertBefore(notifyPrompt(), $("my-order-list"));
+      startOrderAlerts(user, { onChange: () => { if (shell.current() === "orders") refreshOrders(); } });
+
+      const shell = mountShell({
+        role: "customer", user, profile, initial: "home",
+        items: [
+          { id: "home",    icon: "home",    key: "navShops",   shortKey: "shHome" },
+          { id: "cart",    icon: "cart",    key: "navCart",    shortKey: "shCart" },
+          { id: "orders",  icon: "orders",  key: "navOrders",  shortKey: "shOrders" },
+          { id: "address", icon: "address", key: "navAddress" }
+        ],
+        profileRows: () => [[t("address"), profile.address || t("notSaved")]],
+        onLogout: async () => { await logOut(); location.href = "./login.html"; },
+        onEnter: (id) => {
+          if (id === "home") {
+            browse.paintLocation();
+            browse.showHome();
+            $("cart-view").hidden = true;
+          }
+          if (id === "cart") $("cart-btn").click();
+          if (id === "orders") refreshOrders();
+        }
+      });
+      // Topbar cart button / cart "Wapas" keep the sidebar highlight in sync
+      $("cart-btn").addEventListener("click", () => shell.go("cart", { silent: true }));
+      $("cart-back").addEventListener("click", () => shell.go("home", { silent: true }));
+      $("loc-btn").addEventListener("click", () => shell.go("address"));
+    });
+  </script>
+</body>
+</html>

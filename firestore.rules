@@ -1,0 +1,430 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isRole(r) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == r
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'active') == 'active';
+    }
+
+    // ONE store: storeSettings/main (name, address, phone, isOpen, delivery). Orders still carry shopId = 'main' until Phase 7.
+    function store() {
+      return get(/databases/$(database)/documents/storeSettings/main).data;
+    }
+    function storeExists() {
+      return exists(/databases/$(database)/documents/storeSettings/main);
+    }
+    // Delivery charge + minimum order are the STORE's own settings (storeSettings/main.delivery). Orders must use them
+    // exactly: a customer cannot pick a smaller fee or skip the minimum. Missing settings mean 0 / 0.
+    function storeDelivery() {
+      return store().get('delivery', {});
+    }
+    // An explicit isOpen=false or delivery.suspended=true blocks new orders on the server too (not just in the UI).
+    function storeAcceptsOrders() {
+      return storeExists()
+        && store().get('isOpen', true) == true
+        && storeDelivery().get('suspended', false) == false;
+    }
+    function feeNow() {
+      return storeDelivery().get('deliveryFee', 0);
+    }
+    function minNow() {
+      return storeDelivery().get('minimumOrderAmount', 0);
+    }
+    // Identity check for money actions (placing an order): the account must have a VERIFIED e-mail
+    // (Google sign-in is verified by Google; e-mail+password after the verification link) - or, for older accounts, a phone
+    // number that was verified by SMS OTP in the past. The mobile number stored in users/shops/orders is only CONTACT
+    // information (nobody proves it belongs to the person), so rules only check its format.
+    function identityVerified() {
+      return signedIn()
+        && (request.auth.token.get('email_verified', false) == true || 'phone_number' in request.auth.token);
+    }
+    function profileOf(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function validDelivery(d) {
+      return d is map
+        && d.keys().hasOnly(['deliveryFee','minimumOrderAmount','estimatedPreparationMinutes','suspended'])
+        && (!('suspended' in d) || d.suspended is bool)
+        && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee <= 500))
+        && (!('minimumOrderAmount' in d) || (d.minimumOrderAmount is number && d.minimumOrderAmount >= 0 && d.minimumOrderAmount <= 10000))
+        && (!('estimatedPreparationMinutes' in d)
+            || (d.estimatedPreparationMinutes is int && d.estimatedPreparationMinutes >= 0 && d.estimatedPreparationMinutes <= 240));
+    }
+
+    function validProduct(d) {
+      return d.keys().hasOnly(['name','price','unit','stock','active','createdAt','lastOrderId','image','mrp','categoryId','bestSeller','featured'])
+        && (!('image' in d)
+            || (d.image is string
+                && d.image.size() <= 40000
+                && d.image.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')))
+        && d.name is string
+        && d.name.size() >= 2 && d.name.size() <= 80
+        && d.price is number
+        && d.price > 0 && d.price <= 100000
+        && (!('mrp' in d) || (d.mrp is number && d.mrp > 0 && d.mrp <= 100000))
+        && (!('categoryId' in d) || (d.categoryId is string && d.categoryId.size() >= 2 && d.categoryId.size() <= 40))
+        && d.unit in ['kg','g','litre','piece','packet','dozen','pair','box','metre']
+        && d.stock is int
+        && d.stock >= 0 && d.stock <= 100000
+        && d.active is bool
+        && (!('bestSeller' in d) || d.bestSeller is bool)
+        && (!('featured' in d) || d.featured is bool)
+        && (!('lastOrderId' in d) || d.lastOrderId is string);
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name','phone','role','status','createdAt'])
+        && request.resource.data.role == 'customer'
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 60
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[6-9][0-9]{9}$');
+
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.keys().hasOnly(['name','phone','role','status','createdAt','address'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 60
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
+        && (!('address' in request.resource.data)
+            || (request.resource.data.address is string
+                && request.resource.data.address.size() >= 5
+                && request.resource.data.address.size() <= 200));
+    }
+
+    function validStore(d) {
+      return d.name is string && d.name.size() >= 2 && d.name.size() <= 60
+        && d.address is string && d.address.size() >= 5 && d.address.size() <= 200
+        && d.phone is string && d.phone.matches('^[6-9][0-9]{9}$')
+        && (!('isOpen' in d) || d.isOpen is bool)
+        && (!('delivery' in d) || validDelivery(d.delivery));
+    }
+
+    // ONE store record: storeSettings/main, created once by the owner (admin). No seller registration, no approval step.
+    match /storeSettings/{id} {
+      allow read: if signedIn();
+
+      allow create: if isRole('admin')
+        && id == 'main'
+        && request.resource.data.keys().hasOnly(['ownerUid','name','address','phone','isOpen','delivery','createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && validStore(request.resource.data);
+
+      allow update: if isRole('admin')
+        && id == 'main'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','address','phone','isOpen','delivery'])
+        && validStore(request.resource.data);
+
+      allow delete: if false;
+    }
+
+    // Grocery departments (Phase 4). Customers see only active ones (their query must filter active == true).
+    // Departments are never deleted, only deactivated, so old products never point at a missing department.
+    function validCategory(d) {
+      return d.keys().hasOnly(['name','order','active','createdAt'])
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 30
+        && d.order is int && d.order >= 0 && d.order <= 100000
+        && d.active is bool;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if signedIn() && (resource.data.active == true || isRole('admin'));
+
+      allow create: if isRole('admin')
+        && validCategory(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isRole('admin')
+        && validCategory(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if false;
+    }
+
+    // Home-screen banners (Phase 5). The owner screen to manage them comes in Phase 6; until then they are added in the Console.
+    function validBanner(d) {
+      return d.keys().hasOnly(['title','subtitle','image','target','order','active','createdAt'])
+        && d.title is string && d.title.size() >= 2 && d.title.size() <= 40
+        && (!('subtitle' in d) || (d.subtitle is string && d.subtitle.size() <= 60))
+        && (!('target' in d) || (d.target is string && d.target.size() <= 40))
+        && (!('image' in d)
+            || (d.image is string && d.image.size() <= 40000
+                && d.image.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')))
+        && d.order is int && d.order >= 0 && d.order <= 1000
+        && d.active is bool;
+    }
+
+    match /banners/{bannerId} {
+      allow read: if signedIn() && (resource.data.active == true || isRole('admin'));
+      allow create: if isRole('admin') && validBanner(request.resource.data) && request.resource.data.createdAt == request.time;
+      allow update: if isRole('admin') && validBanner(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isRole('admin');
+    }
+
+    function categoryOk(d) {
+      return !('categoryId' in d) || exists(/databases/$(database)/documents/categories/$(d.categoryId));
+    }
+
+    // Top-level products: only the owner (admin) writes them. A customer may only LOWER stock, as part of placing an order.
+    match /products/{productId} {
+      allow read: if signedIn() && (resource.data.active == true || isRole('admin'));
+
+      allow create: if isRole('admin')
+        && validProduct(request.resource.data)
+        && categoryOk(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isRole('admin')
+        && validProduct(request.resource.data)
+        && categoryOk(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock','lastOrderId'])
+        && request.resource.data.lastOrderId is string
+        && !exists(/databases/$(database)/documents/orders/$(request.resource.data.lastOrderId))
+        && oAfter(request.resource.data.lastOrderId).customerUid == request.auth.uid
+        && qtyIn(oAfter(request.resource.data.lastOrderId).items, productId) >= 1
+        && request.resource.data.stock >= 0
+        && request.resource.data.stock ==
+             resource.data.stock - qtyIn(oAfter(request.resource.data.lastOrderId).items, productId);
+
+      allow delete: if false;
+    }
+
+    function pdoc(items, n) {
+      return get(/databases/$(database)/documents/products/$(items[n].productId)).data;
+    }
+
+    function itemOk(items, n) {
+      return items.size() <= n
+        || (items[n].keys().hasOnly(['productId','name','price','unit','qty'])
+            && items[n].qty is int && items[n].qty >= 1 && items[n].qty <= 20
+            && pdoc(items, n).active == true
+            && pdoc(items, n).name == items[n].name
+            && pdoc(items, n).price == items[n].price
+            && pdoc(items, n).unit == items[n].unit
+            && pdoc(items, n).stock >= items[n].qty);
+    }
+
+    function oAfter(oid) {
+      return getAfter(/databases/$(database)/documents/orders/$(oid)).data;
+    }
+
+    function qtyIn(items, pid) {
+      return (items.size() > 0 && items[0].productId == pid) ? items[0].qty
+        : (items.size() > 1 && items[1].productId == pid) ? items[1].qty
+        : (items.size() > 2 && items[2].productId == pid) ? items[2].qty
+        : (items.size() > 3 && items[3].productId == pid) ? items[3].qty
+        : (items.size() > 4 && items[4].productId == pid) ? items[4].qty
+        : 0;
+    }
+
+    function neq(items, i, j) {
+      return items.size() <= j || items[i].productId != items[j].productId;
+    }
+
+    function distinct(items) {
+      return neq(items,0,1) && neq(items,0,2) && neq(items,0,3) && neq(items,0,4)
+        && neq(items,1,2) && neq(items,1,3) && neq(items,1,4)
+        && neq(items,2,3) && neq(items,2,4) && neq(items,3,4);
+    }
+
+    function line(items, n) {
+      return items.size() > n ? items[n].price * items[n].qty : 0;
+    }
+
+    match /orders/{orderId} {
+      allow create: if isRole('customer')
+        && identityVerified()
+        && request.resource.data.keys().hasOnly(
+             ['customerUid','shopId','shopName','items','subtotal','deliveryFee','total','address','phone','paymentMethod','status','createdAt'])
+        && request.resource.data.customerUid == request.auth.uid
+        && request.resource.data.status == 'placed'
+        && request.resource.data.paymentMethod == 'COD'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.shopId == 'main'
+        && storeAcceptsOrders()
+        && request.resource.data.shopName == store().name
+        && request.resource.data.address is string
+        && request.resource.data.address.size() >= 5
+        && request.resource.data.address.size() <= 200
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
+        && request.resource.data.items is list
+        && request.resource.data.items.size() >= 1
+        && request.resource.data.items.size() <= 5
+        && distinct(request.resource.data.items)
+        && request.resource.data.subtotal ==
+             line(request.resource.data.items, 0) + line(request.resource.data.items, 1)
+             + line(request.resource.data.items, 2) + line(request.resource.data.items, 3)
+             + line(request.resource.data.items, 4)
+        && request.resource.data.deliveryFee == feeNow()
+        && request.resource.data.total == request.resource.data.subtotal + request.resource.data.deliveryFee
+        && request.resource.data.subtotal >= minNow()
+        && itemOk(request.resource.data.items, 0)
+        && itemOk(request.resource.data.items, 1)
+        && itemOk(request.resource.data.items, 2)
+        && itemOk(request.resource.data.items, 3)
+        && itemOk(request.resource.data.items, 4);
+
+      // Riders see the open pool (status == accepted: accepting an order and claiming it are one step,
+      // so an `accepted` order never has a rider yet) and the orders they claimed themselves.
+      allow read: if (signedIn() && resource.data.customerUid == request.auth.uid)
+        || (isRole('delivery')
+            && (resource.data.status == 'accepted'
+                || resource.data.get('deliveryBoyId', '') == request.auth.uid))
+        || isRole('admin');
+
+      // Owner (admin): accept / reject only. Handing over to a rider and delivering are the rider's moves.
+      // Customer: cancel while still `placed`.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && (
+          (isRole('admin')
+            && resource.data.status == 'placed'
+            && request.resource.data.status in ['accepted','rejected'])
+          || (resource.data.customerUid == request.auth.uid
+            && resource.data.status in ['placed', 'accepted']
+            && !('deliveryBoyId' in resource.data)
+            && request.resource.data.status == 'cancelled')
+        );
+
+      // Rider claims an accepted order: status -> out_for_delivery and deliveryBoyId = self in ONE write.
+      // The second rider to tap loses: by then the order is no longer `accepted`.
+      allow update: if isRole('delivery')
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','deliveryBoyId','riderName','riderPhone'])
+        && resource.data.status == 'accepted'
+        && !('deliveryBoyId' in resource.data)
+        && request.resource.data.status == 'out_for_delivery'
+        && request.resource.data.deliveryBoyId == request.auth.uid
+        && request.resource.data.riderName == profileOf(request.auth.uid).name
+        && request.resource.data.riderPhone == profileOf(request.auth.uid).phone;
+
+      // Rider hands the order back (cannot deliver / vehicle problem): status -> accepted, rider fields removed.
+      allow update: if isRole('delivery')
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','deliveryBoyId','riderName','riderPhone'])
+        && resource.data.get('deliveryBoyId', '') == request.auth.uid
+        && resource.data.status == 'out_for_delivery'
+        && request.resource.data.status == 'accepted'
+        && !('deliveryBoyId' in request.resource.data)
+        && !('riderName' in request.resource.data)
+        && !('riderPhone' in request.resource.data);
+
+      // Only the rider who holds the order can mark it delivered.
+      allow update: if isRole('delivery')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && resource.data.get('deliveryBoyId', '') == request.auth.uid
+        && resource.data.status == 'out_for_delivery'
+        && request.resource.data.status == 'delivered';
+
+      allow delete: if false;
+    }
+
+    // ---- order reviews: reviews/{orderId} (one per order, written from modules/customer/rate-order.js)
+    // Step 1 (emoji) creates the doc with detailsDone=false; "Tell us More" fills the rest and sets
+    // detailsDone=true, after which it is locked. The owner can read reviews of the store.
+    function rOk(l, n) {
+      return l.size() <= n || (l[n] is int && l[n] >= 0 && l[n] <= 5);
+    }
+
+    function validReview(d) {
+      return d.keys().hasOnly(['orderId','customerUid','shopId','rating','tags','comment',
+                               'shopRating','itemRatings','detailsDone','createdAt'])
+        && d.rating is int && d.rating >= 1 && d.rating <= 5
+        && d.tags is list && d.tags.size() <= 5
+        && d.tags.hasOnly(['quality','speed','packaging','price','behaviour'])
+        && d.comment is string && d.comment.size() <= 300
+        && d.shopRating is int && d.shopRating >= 0 && d.shopRating <= 5
+        && d.itemRatings is list && d.itemRatings.size() <= 5
+        && rOk(d.itemRatings, 0) && rOk(d.itemRatings, 1) && rOk(d.itemRatings, 2)
+        && rOk(d.itemRatings, 3) && rOk(d.itemRatings, 4)
+        && d.detailsDone is bool;
+    }
+
+    match /reviews/{orderId} {
+      allow create: if isRole('customer')
+        && validReview(request.resource.data)
+        && request.resource.data.orderId == orderId
+        && request.resource.data.customerUid == request.auth.uid
+        && request.resource.data.detailsDone == false
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/orders/$(orderId))
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.customerUid == request.auth.uid
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.shopId == request.resource.data.shopId
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.status == 'delivered';
+
+      allow read: if signedIn()
+        && (resource.data.customerUid == request.auth.uid
+            || isRole('admin'));
+
+      allow update: if signedIn()
+        && resource.data.customerUid == request.auth.uid
+        && resource.data.detailsDone == false
+        && validReview(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['rating','tags','comment','shopRating','itemRatings','detailsDone'])
+        && (request.resource.data.itemRatings.size() == 0
+            || request.resource.data.itemRatings.size()
+               == get(/databases/$(database)/documents/orders/$(orderId)).data.items.size());
+
+      allow delete: if false;
+    }
+
+    // ---- role-change audit trail: written ONLY by the setDeliveryRole Cloud Function (Admin SDK bypasses rules).
+    // No client (not even admin) can read or write it from the browser.
+    match /roleAudit/{auditId} {
+      allow read, write: if false;
+    }
+
+    // FCM token of this user's device, used by the push functions (functions read it with the Admin SDK).
+    match /pushTokens/{uid} {
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['token','updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() >= 20 && request.resource.data.token.size() <= 4096
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow read: if false;
+    }
+
+    match /feedback/{fid} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid','role','rating','comment','lang','createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role in ['customer','delivery','admin']
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.comment is string
+        && request.resource.data.comment.size() <= 300
+        && request.resource.data.lang in ['hi','en']
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

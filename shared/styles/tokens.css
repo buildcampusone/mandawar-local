@@ -1,0 +1,25 @@
+:root {
+  --safe-top: env(safe-area-inset-top, 0px); /* shared/services/safe-area.js raises it on edge-to-edge phones */
+  color-scheme: light dark;
+  /* ===== Mandawar Mart brand colours (single source of truth) ===== */
+  --primary:#087A43;        /* Primary Green   */
+  --secondary:#064E32;      /* Dark Green      */
+  --fresh:#16A34A;          /* Fresh Green     */
+  --primary-soft:#E4F5EC;   /* Light Mint      */
+  --background:#F8FAFC;
+  --surface:#FFFFFF;
+  --accent:#FFC83D;         /* Accent Yellow: badges / highlights only */
+  --text:#14251C;           /* Primary Text    */
+  --primary-dark:var(--primary);   /* alias kept for older rules */
+  --primary-light:var(--fresh);
+  --success:var(--primary); --danger:#D64545;
+  --border:#DCE9DF; --muted:#5E7266;
+  --radius:16px; --radius-sm:12px;
+  --shadow:0 6px 24px rgba(0,60,30,.08); --shadow-lg:0 14px 40px rgba(8,122,67,.22);
+  --grad:linear-gradient(135deg,#064E32 0%,#087A43 60%,#16A34A 100%);
+  font-family:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --background:#0A1510; --surface:#12201A; --border:#22372C; --text:#E8F3EC; --muted:#93A89B;
+    --primary:#16A34A; --primary-soft:#12301F; --shadow:0 6px 24px rgba(0,0,0,.45); }
+}

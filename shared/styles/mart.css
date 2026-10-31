@@ -1,0 +1,111 @@
+/* Shop product screen (modules/customer/product-grid.js): light-blue header, 3-up cards, cart bar, View All sheet.
+   Uses the brand tokens from tokens.css; only the sky-blue header and the product tile are extra. */
+:root { --mart-sky:#C3D6FA; --mart-sky-ink:#1B2A4A; --mart-tile:#F5F7F2; --mart-mint:var(--primary-soft); }
+@media (prefers-color-scheme: dark) { :root { --mart-sky:#1B2A47; --mart-sky-ink:#E6EDFB; --mart-tile:#E9EEE4; } }
+
+#products-view { max-width:520px; margin-inline:auto; padding-bottom:110px; }
+
+/* header band */
+.mart-head { margin:14px 0 4px; padding:12px 12px 0; background:var(--mart-sky); color:var(--mart-sky-ink); border-radius:22px; }
+.mart-top { display:flex; gap:10px; align-items:center; }
+.mart-back { flex:none; width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:14px; cursor:pointer;
+  background:var(--surface); color:var(--text); font-size:1.5rem; line-height:1; }
+.mart-search { flex:1; min-width:0; display:flex; align-items:center; gap:8px; height:48px; padding:0 8px 0 14px; background:var(--surface); border-radius:14px; color:var(--muted); }
+.mart-search svg { flex:none; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; }
+.mart-search input { flex:1; min-width:0; border:0 !important; box-shadow:none !important; background:none !important; padding:0 !important; height:100%; font-size:1rem; }
+.mart-mic { flex:none; width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:none; color:var(--text); cursor:pointer; }
+.mart-mic svg { fill:currentColor; stroke:none; }
+.mart-title { margin:12px 2px 2px; font-size:1.25rem; font-weight:700; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.mart-nav { display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; margin:0 -12px; padding:0 12px; }
+.mart-nav button { flex:none; position:relative; border:0; background:none; color:var(--mart-sky-ink); font:inherit; font-weight:600; font-size:.88rem; padding:10px 12px 12px; cursor:pointer; white-space:nowrap; }
+.mart-nav button[aria-current="true"]::after { content:""; position:absolute; left:12px; right:12px; bottom:0; height:4px; border-radius:4px 4px 0 0; background:var(--mart-sky-ink); }
+.mart-head:has(.mart-nav[hidden]) { padding-bottom:14px; }
+
+/* sections + cards */
+.mc-sec { scroll-margin-top:72px; padding-top:6px; }
+.mc-sec h3 { margin:18px 0 10px; font-size:1.2rem; font-weight:700; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.mc-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.mc { display:flex; flex-direction:column; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+.mc-img { position:relative; aspect-ratio:1/1.02; background:var(--mart-tile); }
+.mc-img .thumb { position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:0; font-size:2.4rem; }
+.mc-img .thumb img { object-fit:contain; padding:6%; }
+.mc-slot { position:absolute; right:5px; bottom:5px; left:22%; display:flex; justify-content:flex-end; }
+.mc-addbtn, .mc-stp, .mc-out { width:100%; height:34px; border-radius:10px; font:inherit; font-weight:700; font-size:.88rem; display:flex; align-items:center; justify-content:center; }
+.mc-addbtn { border:1.5px solid var(--primary); background:var(--surface); color:var(--primary); cursor:pointer; box-shadow:0 1px 3px rgba(0,60,30,.12); }
+.mc-addbtn:active { transform:scale(.97); }
+.mc-stp { background:var(--primary); color:#fff; justify-content:space-between; }
+.mc-stp button { width:30px; height:100%; border:0; background:none; color:inherit; font:inherit; font-size:1.1rem; font-weight:700; cursor:pointer; }
+.mc-stp span { font-size:.9rem; }
+.mc-out { background:var(--surface); color:var(--danger); border:1.5px solid var(--border); font-size:.72rem; }
+.mc-info { display:flex; flex-direction:column; gap:2px; padding:7px 7px 9px; flex:1; }
+.mc-pr { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.mc-pr b { background:var(--primary); color:#fff; border-radius:7px; padding:1px 7px; font-size:.86rem; font-variant-numeric:tabular-nums; }
+.mc-pr s { color:var(--muted); font-size:.72rem; }
+.mc-nm { margin:3px 0 0; font-size:.8rem; font-weight:600; line-height:1.25; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.mc-wt { margin:0; font-size:.72rem; color:var(--muted); }
+.mc-tag { margin-top:auto; padding-top:5px; }
+.mc-tag span { display:block; min-height:34px; padding:4px 6px; border-radius:8px; font-size:.68rem; font-weight:600; line-height:1.2; transition:opacity .2s; background:linear-gradient(90deg,var(--mart-mint),transparent); color:var(--primary); }
+.mc-tag span small { display:block; font-size:.8rem; font-weight:700; }
+.mc-tag span.warn { background:#FFF1C7; color:#6B4C00; }
+.mc-tag span.bad { background:#FDE3E3; color:#A12B2B; }
+.mc-tag span.none { visibility:hidden; }
+
+.mc-all { margin-top:10px; width:100%; height:54px; border:0; border-radius:16px; background:var(--mart-mint); color:var(--primary); display:flex; align-items:center; justify-content:center; gap:10px; font:inherit; font-weight:700; font-size:1rem; cursor:pointer; }
+.mc-stack { display:flex; }
+.mc-stack .thumb { width:32px; height:32px; border-radius:50%; border:2px solid var(--surface); margin-left:-8px; font-size:.8rem; }
+.mc-stack .thumb:first-child { margin-left:0; }
+
+/* floating cart bar (above the mobile bottom nav) */
+.mart-bar { position:fixed; z-index:24; left:12px; right:12px; bottom:calc(88px + env(safe-area-inset-bottom)); max-width:496px; margin:0 auto; }
+.mart-bar button { width:100%; height:54px; border:0; border-radius:16px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font:inherit; font-weight:700; cursor:pointer; box-shadow:var(--shadow-lg); }
+.mart-bar small { display:block; font-size:.74rem; font-weight:500; opacity:.9; line-height:1.1; }
+.mart-bar b { display:block; line-height:1.2; }
+@media (min-width:900px) { .mart-bar { bottom:20px; } }
+
+/* View All sheet */
+.mart-scrim { position:fixed; inset:0; z-index:64; background:rgba(4,40,20,.5); opacity:0; transition:opacity .25s; }
+.mart-scrim.on { opacity:1; }
+.mart-sheet { position:fixed; z-index:65; left:0; right:0; bottom:0; max-width:520px; margin:0 auto; max-height:86vh; display:flex; flex-direction:column; background:var(--background); border-radius:22px 22px 0 0; padding-bottom:env(safe-area-inset-bottom); transform:translateY(105%); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
+.mart-sheet.on { transform:none; }
+.mart-sheet-h { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 16px 8px; }
+.mart-sheet-h h3 { margin:0; font-size:1.15rem; overflow-wrap:anywhere; }
+.mart-sheet-h button { flex:none; width:36px; height:36px; border:0; border-radius:50%; background:var(--primary-soft); color:var(--primary); font-size:1.2rem; font-weight:700; cursor:pointer; }
+.mart-sheet-b { overflow-y:auto; padding:4px 12px 20px; }
+.mart-sheet-b .mc-row { gap:8px; }
+
+@media (prefers-reduced-motion: reduce) { .mart-sheet, .mart-scrim, .mc-tag span { transition:none; } }
+
+/* ---- Shop by category (department tiles) ---- */
+.mc-dgrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.mc-dtile { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; padding:10px 4px 8px; border:1px solid var(--border); border-radius:16px; background:var(--surface); color:var(--text); font:inherit; cursor:pointer; }
+.mc-dtile.empty { opacity:.55; }
+.mc-dico { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; background:var(--mart-mint); font-size:1.5rem; line-height:1; }
+.mc-dnm { font-size:.68rem; font-weight:600; line-height:1.2; text-align:center; overflow-wrap:anywhere; }
+@media (min-width:600px) { .mc-dgrid { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+@media (max-width:340px) { .mc-dgrid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+/* ---- Phase 5: home screen ---- */
+.mart-loc { display:flex; align-items:center; gap:6px; width:100%; margin:0 0 10px; padding:2px 4px; border:0; background:none; color:var(--mart-sky-ink); font:inherit; font-size:.82rem; cursor:pointer; text-align:left; }
+.mart-loc svg { flex:none; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.mart-loc > span:nth-of-type(1) { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mart-loc b { font-weight:700; }
+
+/* banners: swipe strip with snap */
+.mc-bn-wrap { margin:14px 0 4px; }
+.mc-bn { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch; border-radius:18px; }
+.mc-bn::-webkit-scrollbar { display:none; }
+.mc-bn-slide { position:relative; flex:0 0 100%; scroll-snap-align:start; min-height:128px; padding:0; border:0; border-radius:18px; overflow:hidden; color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.mc-bn-slide.tone0 { background:linear-gradient(120deg,#064E32,#16A34A); }
+.mc-bn-slide.tone1 { background:linear-gradient(120deg,#087A43,#4CBF7A); }
+.mc-bn-slide.tone2 { background:linear-gradient(120deg,#0B5D3B,#2E9E6B); }
+.mc-bn-slide img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.mc-bn-tx { position:relative; display:flex; flex-direction:column; justify-content:flex-end; gap:2px; min-height:128px; padding:14px 16px; background:linear-gradient(0deg,rgba(0,0,0,.45),transparent 70%); }
+.mc-bn-tx b { font-size:1.15rem; line-height:1.2; overflow-wrap:anywhere; }
+.mc-bn-tx small { font-size:.82rem; opacity:.95; }
+
+/* skeleton while loading */
+.mc-skel-h { width:42%; height:20px; margin:18px 0 10px; border-radius:8px; }
+.mc-skel { aspect-ratio:1/1.5; border-radius:16px; }
+.mc-skel-h, .mc-skel { background:linear-gradient(90deg,var(--border) 25%,var(--mart-tile) 50%,var(--border) 75%); background-size:200% 100%; animation:mc-shine 1.3s linear infinite; }
+@keyframes mc-shine { to { background-position:-200% 0; } }
+@media (prefers-reduced-motion: reduce) { .mc-skel-h, .mc-skel { animation:none; } }
