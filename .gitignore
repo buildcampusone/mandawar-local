@@ -1,7 +1,0 @@
-.env
-.env.*
-!.env.example
-.firebase/
-node_modules/
-.DS_Store
-*.log
