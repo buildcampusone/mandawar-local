@@ -54,7 +54,8 @@ test("records ledger row and creates wallet", async () => {
   assert.deepEqual(r, { recorded: true, commissionPaise: 1250, ratePercent: 5 });
   assert.deepEqual(db.store.get("ledger/O1"), {
     orderId: "O1", shopId: "S1", type: "commission", paymentMethod: "COD",
-    orderTotalPaise: 25000, ratePercent: 5, commissionPaise: 1250, createdAt: "TS"
+    orderTotalPaise: 25000, itemsPaise: 25000, deliveryFeePaise: 0, riderId: null,
+    ratePercent: 5, commissionPaise: 1250, createdAt: "TS"
   });
   assert.deepEqual(db.store.get("wallets/S1"), {
     shopId: "S1", commissionDuePaise: 1250, totalCommissionPaise: 1250,
@@ -96,4 +97,24 @@ test("skips: not delivered, missing order, bad total, non-COD", async () => {
   assert.equal((await run(base({ total: -5 }))).reason, "bad-total");
   assert.equal((await run(base({ paymentMethod: "ONLINE" }))).reason, "unsupported-payment-method");
   assert.equal((await run(base({ shopId: "" }))).reason, "no-shop");
+});
+
+test("delivery fee is not part of commission or shop sales; rider is recorded", async () => {
+  const db = fakeDb({ ...base({ subtotal: 250, deliveryFee: 30, total: 280, deliveryBoyId: "R1" }),
+    "config/platform": { commissionPercent: 10 } });
+  const r = await recordCommissionForOrder({ db, orderId: "O1", now });
+  assert.deepEqual(r, { recorded: true, commissionPaise: 2500, ratePercent: 10 }); // 10% of 250, not of 280
+  const row = db.store.get("ledger/O1");
+  assert.equal(row.orderTotalPaise, 28000);
+  assert.equal(row.itemsPaise, 25000);
+  assert.equal(row.deliveryFeePaise, 3000);
+  assert.equal(row.riderId, "R1");
+  assert.equal(db.store.get("wallets/S1").totalSalesPaise, 25000);
+});
+
+test("subtotal + deliveryFee must equal total, otherwise nothing is recorded", async () => {
+  const run = (o) => recordCommissionForOrder({ db: fakeDb(base(o)), orderId: "O1", now });
+  assert.equal((await run({ subtotal: 250, deliveryFee: 30, total: 250 })).reason, "bad-total");
+  assert.equal((await run({ subtotal: 250, total: 250 })).reason, "bad-total");        // fee missing but subtotal present
+  assert.equal((await run({ subtotal: -1, deliveryFee: 0, total: 250 })).reason, "bad-total");
 });

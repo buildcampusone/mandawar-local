@@ -110,3 +110,16 @@
 .star { width:48px; height:48px; display:grid; place-items:center; border:0; background:none; cursor:pointer; color:var(--muted); }
 .star svg { width:34px; height:34px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linejoin:round; }
 .star.on { color:#E0A800; } .star.on svg { fill:var(--accent); }
+
+/* ---- admin: delivery partners (modules/admin/delivery-partners.js) */
+.rd-search { display:flex; gap:8px; margin:6px 0 14px; } .rd-search input { flex:1; min-width:0; padding:12px 14px; }
+.rd-search .category { flex:none; } .rd .sheet-msg { margin:0 0 10px; }
+.rd .category:disabled, .sheet .category:disabled { opacity:.55; cursor:not-allowed; }
+.sheet .category.ghost { background:var(--primary-soft); color:var(--primary); margin-top:8px; }
+
+/* ---- customer cart stepper / shopkeeper call link */
+.stp { display:inline-flex; align-items:center; gap:4px; margin:6px 0 2px; background:var(--primary-soft); border-radius:999px; padding:3px; }
+.stp button { width:34px; height:34px; border:0; border-radius:50%; background:var(--surface); color:var(--text); font:inherit; font-size:1.15rem; font-weight:700; cursor:pointer; box-shadow:var(--shadow); }
+.stp button:disabled { opacity:.4; cursor:not-allowed; } .stp-n { min-width:30px; text-align:center; font-weight:700; }
+.cv-bad { color:var(--danger); font-weight:600; }
+a.category { display:inline-block; text-decoration:none; } .shop-card a.category { margin:8px 8px 0 0; }

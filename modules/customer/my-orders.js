@@ -10,7 +10,7 @@ import { getCart, replaceCart } from "./cart.js";
 
 // status -> [label, tone, icon]
 const LABEL = {
-  placed: ["Order bheja gaya", "warn", "clock"], accepted: ["Dukaan ne accept kiya", "", "clock"],
+  placed: ["Order bheja gaya", "warn", "clock"], accepted: ["Accept hua - rider dhoondh rahe hain", "", "clock"],
   rejected: ["Dukaan ne reject kiya", "bad", "cross"], out_for_delivery: ["Delivery par", "", "clock"],
   delivered: ["Delivered", "", "check"], cancelled: ["Cancel kiya", "bad", "cross"]
 };
@@ -172,6 +172,17 @@ export function initMyOrders(user, { onReorder } = {}) {
     const main = mk("div", "oc-main");
     main.appendChild(mk("p", "oc-when", [whenText(o.createdAt), money(o.total)].filter(Boolean).join(" • ")));
     main.appendChild(mk("p", "oc-id", "Order ID #" + o.id.slice(0, 6).toUpperCase() + " • COD"));
+    if (typeof o.deliveryFee === "number")
+      main.appendChild(mk("p", "oc-id", "Saaman " + money(o.subtotal) + " + Delivery " + (o.deliveryFee > 0 ? money(o.deliveryFee) : "Free")));
+    if (o.deliveryBoyId && o.status === "out_for_delivery") {
+      const r = mk("p", "oc-id", "Rider: " + (o.riderName || "") + " ");
+      if (/^[6-9][0-9]{9}$/.test(o.riderPhone || "")) {
+        const a = mk("a", "oc-link", "Call");
+        a.href = "tel:" + o.riderPhone;
+        r.appendChild(a);
+      }
+      main.appendChild(r);
+    }
     const state = mk("span", "oc-state " + tone);
     state.append(icon(ic), txt);
     row.append(main, state);

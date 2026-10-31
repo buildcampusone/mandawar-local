@@ -24,6 +24,7 @@
 </head>
 <body class="login-page">
   <script src="./shared/components/splash.js"></script>
+  <script type="module" src="./shared/services/pwa.js"></script>
   <div class="app">
     <header class="hero">
       <div class="hero-top">
@@ -41,8 +42,12 @@
     </header>
 
     <main class="sheet">
-      <h1 id="title" data-i18n="login">लॉगिन करें</h1>
-      <p class="sub" id="sub" data-i18n="sub">अपने शहर की दुकानों से जुड़ें</p>
+      <section id="v-main">
+        <h1 id="title" data-i18n="login">लॉगिन करें</h1>
+        <p class="sub" id="sub" data-i18n="sub">अपने शहर की दुकानों से जुड़ें</p>
+
+        <button type="button" class="gbtn" id="google-btn"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span data-i18n="googleBtn">Google से जारी रखें</span></button>
+        <div class="or"><span data-i18n="or">या</span></div>
 
       <form id="auth-form" novalidate>
         <div id="signup-fields" hidden>
@@ -80,8 +85,53 @@
         <button class="cta" type="submit" id="submit" disabled data-i18n="cont">आगे बढ़ें</button>
       </form>
 
-      <div class="or"><span data-i18n="or">या</span></div>
-      <a href="#" id="toggle" class="alt" data-i18n="newAcc">नया अकाउंट बनाएं</a>
+        <a href="#" id="phone-login-link" class="alt" data-i18n="phoneLogin">मोबाइल OTP से लॉगिन करें</a>
+        <a href="#" id="toggle" class="alt alt2" data-i18n="newAcc">नया अकाउंट बनाएं</a>
+      </section>
+
+      <section id="v-phone" hidden>
+        <h1 data-i18n="plTitle">मोबाइल से लॉगिन</h1>
+        <p class="sub" data-i18n="plSub">अपने 10 अंकों के नंबर पर OTP पाएं</p>
+        <div class="vform">
+          <label class="field"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg><span class="cc">+91</span>
+            <input id="pl-phone" data-i18n-ph="phone" placeholder="मोबाइल नंबर" inputmode="numeric" maxlength="10" autocomplete="tel-national" class="has-cc"></label>
+          <p class="vmsg" id="pl-msg" aria-live="polite"></p>
+          <button class="cta" type="button" id="pl-send" disabled data-i18n="sendOtp">OTP भेजें</button>
+          <a href="#" class="alt back" data-back data-i18n="backLogin">← वापस लॉगिन पर</a>
+        </div>
+      </section>
+
+      <section id="v-otp" hidden>
+        <h1 data-i18n="otpTitle">OTP डालें</h1>
+        <p class="sub" id="otp-to"></p>
+        <div class="vform">
+          <label class="field"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+            <input id="otp-code" class="otp-input" data-i18n-ph="otpPh" placeholder="6 अंकों का OTP" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
+          <p class="vmsg" id="otp-msg" aria-live="polite"></p>
+          <button class="cta" type="button" id="otp-verify" disabled data-i18n="otpVerify">वेरिफ़ाई करें</button>
+          <button type="button" class="linkbtn" id="otp-resend" disabled></button>
+          <a href="#" class="alt back" id="otp-change" data-i18n="otpChange">नंबर बदलें</a>
+        </div>
+      </section>
+
+      <section id="v-profile" hidden>
+        <h1 data-i18n="prTitle">प्रोफ़ाइल पूरी करें</h1>
+        <p class="sub" data-i18n="prSub">बस एक कदम बाकी है</p>
+        <div class="vform">
+          <label class="field"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <input id="p-name" data-i18n-ph="name" placeholder="पूरा नाम" autocomplete="name"></label>
+          <label class="field" id="p-phone-field"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg><span class="cc">+91</span>
+            <input id="p-phone" data-i18n-ph="phone" placeholder="मोबाइल नंबर" inputmode="numeric" maxlength="10" autocomplete="tel-national" class="has-cc"></label>
+          <label class="field select"><svg viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M4 9v11h16V9M9 20v-6h6v6"/></svg>
+            <select id="p-role">
+              <option value="customer" data-i18n="customer">मैं ग्राहक हूँ</option>
+              <option value="shopkeeper" data-i18n="shopkeeper">मैं दुकानदार हूँ</option>
+            </select></label>
+          <p class="sub" id="p-hint" style="margin:0;font-size:.85rem"></p>
+          <p class="vmsg" id="pr-msg" aria-live="polite"></p>
+          <button class="cta" type="button" id="pr-submit" disabled data-i18n="prFinish">जारी रखें</button>
+        </div>
+      </section>
 
       <p class="terms">
         <span data-i18n="terms1">आगे बढ़कर, मैं</span>

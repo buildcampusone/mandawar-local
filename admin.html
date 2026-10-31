@@ -17,6 +17,7 @@
 </head>
 <body>
   <script src="./shared/components/splash.js"></script>
+  <script type="module" src="./shared/services/pwa.js"></script>
   <header class="topbar">
     <a class="brand" href="./"><img src="./assets/brand/mark.png" alt="Mandawar logo"><span class="brand-txt"><span class="brand-name">Mandawar</span><small>Your Local Marketplace</small></span></a>
   </header>
@@ -33,11 +34,15 @@
       <h2>Sabhi dukaanein</h2>
       <div id="all-list"></div>
     </section>
+    <section data-panel="riders">
+      <div id="riders-root"></div>
+    </section>
   </main>
   <script type="module">
     import { requireRole, logOut } from "./shared/services/auth.js";
     import { mountShell } from "./shared/components/shell.js";
     import { loadPendingShops, loadAllShops } from "./modules/admin/shops.js";
+    import { loadDeliveryPartners } from "./modules/admin/delivery-partners.js";
     const $ = (id) => document.getElementById(id);
 
     requireRole("admin", (user, profile) => {
@@ -46,12 +51,14 @@
         role: "admin", user, profile, initial: "pending",
         items: [
           { id: "pending", icon: "pending", key: "navPending",  shortKey: "shPending" },
-          { id: "shops",   icon: "shops",   key: "navAllShops", shortKey: "shShops" }
+          { id: "shops",   icon: "shops",   key: "navAllShops", shortKey: "shShops" },
+          { id: "riders",  icon: "rider",   key: "navRiders",   shortKey: "shRiders" }
         ],
         onLogout: async () => { await logOut(); location.href = "./login.html"; },
         onEnter: (id) => {
           if (id === "pending") loadPendingShops($("pending-list"));
           if (id === "shops") loadAllShops($("all-list"));
+          if (id === "riders") loadDeliveryPartners($("riders-root"));
         }
       });
     });

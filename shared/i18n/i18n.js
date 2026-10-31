@@ -21,6 +21,23 @@ const STRINGS = {
     err: "गड़बड़ हुई: ",
     e_invalid: "ईमेल या पासवर्ड गलत है।", e_used: "यह ईमेल पहले से इस्तेमाल में है।", e_net: "इंटरनेट जाँचें और दोबारा कोशिश करें।",
 
+    // ---- OTP + Google login
+    googleBtn: "Google से जारी रखें", phoneLogin: "मोबाइल OTP से लॉगिन करें", backLogin: "← वापस लॉगिन पर",
+    plTitle: "मोबाइल से लॉगिन", plSub: "अपने 10 अंकों के नंबर पर OTP पाएं", sendOtp: "OTP भेजें",
+    otpTitle: "OTP डालें", otpSentTo: "6 अंकों का कोड {n} पर भेजा गया है।", otpPh: "6 अंकों का OTP", otpVerify: "वेरिफ़ाई करें",
+    otpSending: "OTP भेज रहे हैं...", otpResend: "दोबारा भेजें", otpResendIn: "{s} सेकंड में दोबारा भेज सकते हैं", otpChange: "नंबर बदलें",
+    prTitle: "प्रोफ़ाइल पूरी करें", prSub: "बस एक कदम बाकी है", prNeedPhone: "आपके मोबाइल नंबर पर OTP आएगा।", prFinish: "जारी रखें",
+    vbText: "ऑर्डर और दुकान चलाने के लिए अपना मोबाइल नंबर वेरिफ़ाई करें।", vbBtn: "नंबर वेरिफ़ाई करें", vbTitle: "मोबाइल वेरिफ़ाई करें", vbDone: "नंबर वेरिफ़ाई हो गया।",
+    needVerify: "ऑर्डर से पहले अपना मोबाइल नंबर वेरिफ़ाई करें (ऊपर पीला बैनर)।", phoneLocked: "नंबर बदलने के लिए OTP वेरिफ़िकेशन ज़रूरी है।",
+    otpWait: "दोबारा भेजने के लिए {s} सेकंड रुकें।", otpPhoneLimit: "इस नंबर पर बहुत OTP भेजे जा चुके हैं। {m} मिनट बाद कोशिश करें।",
+    otpDeviceLimit: "इस फ़ोन से बहुत OTP मांगे गए। {m} मिनट बाद कोशिश करें।", otpLocked: "बहुत ज़्यादा गलत कोड। {m} मिनट बाद कोशिश करें।", otpLeft: "OTP गलत है। {n} कोशिशें बाकी हैं।",
+    e_phone: "सही 10 अंकों का मोबाइल नंबर डालें।", e_code: "OTP गलत है। दोबारा देखें।", e_codeExp: "OTP की मियाद खत्म। नया OTP मंगाएं।",
+    e_many: "बहुत ज़्यादा कोशिशें। थोड़ी देर बाद करें।", e_quota: "आज के SMS की सीमा पूरी हो गई। बाद में कोशिश करें।",
+    e_captcha: "सिक्योरिटी जाँच फ़ेल हुई। पेज रीफ़्रेश करके दोबारा कोशिश करें।",
+    e_phoneUsed: "यह नंबर पहले से किसी और अकाउंट से जुड़ा है। उसी अकाउंट से लॉगिन करें।",
+    e_diffCred: "इस ईमेल से पहले पासवर्ड वाला अकाउंट बना है। ईमेल और पासवर्ड से लॉगिन करें।",
+    e_notAllowed: "यह लॉगिन तरीका अभी चालू नहीं है (Firebase Console में चालू करना होगा)।", e_domain: "यह वेबसाइट Firebase में अधिकृत नहीं है।",
+
     // ---- shell: navigation
     navShops: "दुकानें", navCart: "मेरा कार्ट", navOrders: "मेरे ऑर्डर", navAddress: "मेरा पता",
     navProducts: "मेरे प्रोडक्ट", navMyShop: "मेरी दुकान", navPending: "पेंडिंग दुकानें", navAllShops: "सभी दुकानें",
@@ -30,6 +47,27 @@ const STRINGS = {
     roleCustomer: "ग्राहक", roleShopkeeper: "दुकानदार", roleAdmin: "एडमिन",
     menuOpen: "मेन्यू खोलें", mainMenu: "मुख्य मेन्यू", quickNav: "क्विक नेविगेशन",
     logout: "लॉगआउट", user: "यूज़र",
+
+    // ---- admin: delivery partners
+    navRiders: "डिलीवरी पार्टनर", shRiders: "राइडर", roleDelivery: "राइडर", navRiderJobs: "डिलीवरी ऑर्डर", shRiderJobs: "डिलीवरी",
+    rdTitle: "डिलीवरी पार्टनर", rdSub: "फ़ोन नंबर या नाम से यूज़र ढूँढें और राइडर बनाएं।",
+    rdTabSearch: "ढूँढें", rdTabRiders: "मौजूदा राइडर",
+    rdSearchPh: "10 अंकों का फ़ोन या नाम", rdSearchBtn: "ढूँढें", rdSearching: "ढूँढ रहे हैं...",
+    rdSearchHint: "ऊपर फ़ोन नंबर या नाम डालकर ढूँढें।", rdNoResult: "कोई यूज़र नहीं मिला।",
+    rdBadQuery: "सही 10 अंकों का फ़ोन नंबर या कम से कम 2 अक्षर का नाम डालें।",
+    rdMake: "राइडर बनाएं", rdRemove: "राइडर हटाएं",
+    rdConfirmMake: "इस यूज़र को डिलीवरी पार्टनर बनाएं?", rdConfirmMakeSub: "{name} ({phone}) को राइडर का रोल मिलेगा।",
+    rdConfirmRemove: "राइडर हटाएं?", rdConfirmRemoveSub: "{name} ({phone}) वापस ग्राहक बन जाएगा।",
+    rdYes: "हाँ, करें", rdWorking: "हो रहा है...",
+    rdMadeOk: "{name} अब राइडर है।", rdRemovedOk: "{name} अब राइडर नहीं है।",
+    rdLocked: "इस रोल को यहाँ से नहीं बदला जा सकता।",
+    rdRidersEmpty: "अभी कोई राइडर नहीं है।", rdLoading: "लोड हो रहा है...", rdLoadFail: "लोड नहीं हुआ।", rdRetry: "दोबारा कोशिश करें",
+    rdActive: "सक्रिय",
+    rdErrActive: "राइडर की डिलीवरी चल रही है। पहले उसे पूरा होने दें।",
+    rdErrSelf: "अपना खुद का रोल नहीं बदल सकते।", rdErrProtected: "इस यूज़र का रोल यहाँ से नहीं बदला जा सकता।",
+    rdErrAlready: "यह पहले से राइडर है।", rdErrNotRider: "यह राइडर नहीं है।", rdErrNotFound: "यूज़र नहीं मिला।",
+    rdErrPerm: "सिर्फ़ एडमिन यह कर सकता है। दोबारा लॉगिन करें।",
+    rdErrNet: "इंटरनेट जाँचें और दोबारा कोशिश करें।", rdErrGeneric: "कुछ गड़बड़ हुई। दोबारा कोशिश करें।",
 
     // ---- profile screen
     profile: "प्रोफ़ाइल",
@@ -125,6 +163,23 @@ const STRINGS = {
     err: "Error: ",
     e_invalid: "Wrong email or password.", e_used: "This email is already in use.", e_net: "Check your internet and try again.",
 
+    // ---- OTP + Google login
+    googleBtn: "Continue with Google", phoneLogin: "Login with mobile OTP", backLogin: "← Back to login",
+    plTitle: "Login with mobile", plSub: "Get an OTP on your 10-digit number", sendOtp: "Send OTP",
+    otpTitle: "Enter OTP", otpSentTo: "A 6-digit code was sent to {n}.", otpPh: "6-digit OTP", otpVerify: "Verify",
+    otpSending: "Sending OTP...", otpResend: "Resend", otpResendIn: "You can resend in {s}s", otpChange: "Change number",
+    prTitle: "Complete your profile", prSub: "One last step", prNeedPhone: "We will send an OTP to your mobile number.", prFinish: "Continue",
+    vbText: "Verify your mobile number to place orders and run a shop.", vbBtn: "Verify number", vbTitle: "Verify mobile number", vbDone: "Number verified.",
+    needVerify: "Verify your mobile number before ordering (yellow banner above).", phoneLocked: "Changing the number needs OTP verification.",
+    otpWait: "Please wait {s}s before requesting another OTP.", otpPhoneLimit: "Too many OTPs sent to this number. Try again in {m} min.",
+    otpDeviceLimit: "Too many OTP requests from this phone. Try again in {m} min.", otpLocked: "Too many wrong codes. Try again in {m} min.", otpLeft: "Wrong OTP. {n} tries left.",
+    e_phone: "Enter a valid 10-digit mobile number.", e_code: "Wrong OTP. Check and try again.", e_codeExp: "OTP expired. Request a new one.",
+    e_many: "Too many attempts. Try again later.", e_quota: "Today's SMS limit is reached. Try again later.",
+    e_captcha: "Security check failed. Refresh the page and try again.",
+    e_phoneUsed: "This number is already linked to another account. Log in to that account.",
+    e_diffCred: "A password account already exists for this email. Log in with email and password.",
+    e_notAllowed: "This login method is not enabled yet (enable it in Firebase Console).", e_domain: "This website is not authorised in Firebase.",
+
     // ---- shell: navigation
     navShops: "Shops", navCart: "My Cart", navOrders: "My Orders", navAddress: "My Address",
     navProducts: "My Products", navMyShop: "My Shop", navPending: "Pending Shops", navAllShops: "All Shops",
@@ -134,6 +189,27 @@ const STRINGS = {
     roleCustomer: "Customer", roleShopkeeper: "Shopkeeper", roleAdmin: "Admin",
     menuOpen: "Open menu", mainMenu: "Main menu", quickNav: "Quick navigation",
     logout: "Logout", user: "User",
+
+    // ---- admin: delivery partners
+    navRiders: "Delivery Partners", shRiders: "Riders", roleDelivery: "Rider", navRiderJobs: "Deliveries", shRiderJobs: "Deliveries",
+    rdTitle: "Delivery partners", rdSub: "Find a user by phone number or name and make them a rider.",
+    rdTabSearch: "Search", rdTabRiders: "Current riders",
+    rdSearchPh: "10-digit phone or name", rdSearchBtn: "Search", rdSearching: "Searching...",
+    rdSearchHint: "Enter a phone number or name above to search.", rdNoResult: "No user found.",
+    rdBadQuery: "Enter a valid 10-digit phone number or a name of at least 2 letters.",
+    rdMake: "Make rider", rdRemove: "Remove rider",
+    rdConfirmMake: "Make this user a delivery partner?", rdConfirmMakeSub: "{name} ({phone}) will get the rider role.",
+    rdConfirmRemove: "Remove this rider?", rdConfirmRemoveSub: "{name} ({phone}) will go back to being a customer.",
+    rdYes: "Yes, do it", rdWorking: "Working...",
+    rdMadeOk: "{name} is now a rider.", rdRemovedOk: "{name} is no longer a rider.",
+    rdLocked: "This role can't be changed here.",
+    rdRidersEmpty: "No riders yet.", rdLoading: "Loading...", rdLoadFail: "Couldn't load.", rdRetry: "Try again",
+    rdActive: "Active",
+    rdErrActive: "This rider has a delivery in progress. Let it finish first.",
+    rdErrSelf: "You can't change your own role.", rdErrProtected: "This user's role can't be changed here.",
+    rdErrAlready: "This user is already a rider.", rdErrNotRider: "This user is not a rider.", rdErrNotFound: "User not found.",
+    rdErrPerm: "Only an admin can do this. Please log in again.",
+    rdErrNet: "Check your internet and try again.", rdErrGeneric: "Something went wrong. Please try again.",
 
     // ---- profile screen
     profile: "Profile",
@@ -234,6 +310,17 @@ export function t(k, vars) {
 }
 
 export function errText(code = "") {
+  if (/popup-closed-by-user|cancelled-popup-request/.test(code)) return "";
+  if (/invalid-phone-number|app\/bad-phone/.test(code)) return t("e_phone");
+  if (/invalid-verification-code/.test(code)) return t("e_code");
+  if (/code-expired|session-expired/.test(code)) return t("e_codeExp");
+  if (/too-many-requests/.test(code)) return t("e_many");
+  if (/quota-exceeded/.test(code)) return t("e_quota");
+  if (/captcha|app-credential|app-not-authorized/.test(code)) return t("e_captcha");
+  if (/credential-already-in-use|phone-number-already-exists|provider-already-linked/.test(code)) return t("e_phoneUsed");
+  if (/account-exists-with-different-credential/.test(code)) return t("e_diffCred");
+  if (/operation-not-allowed/.test(code)) return t("e_notAllowed");
+  if (/unauthorized-domain/.test(code)) return t("e_domain");
   if (/invalid-credential|wrong-password|user-not-found|invalid-email/.test(code)) return t("e_invalid");
   if (/email-already-in-use/.test(code)) return t("e_used");
   if (/network/.test(code)) return t("e_net");

@@ -16,6 +16,33 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/shops/$(shopId)).data.status;
     }
 
+    // Delivery charge + minimum order are the SHOP's own settings (shops/{id}.delivery). Orders must use them
+    // exactly: a customer cannot pick a smaller fee or skip the minimum. Missing settings mean 0 / 0.
+    function shopDelivery(shopId) {
+      return get(/databases/$(database)/documents/shops/$(shopId)).data.get('delivery', {});
+    }
+    // An explicit isOpen=false or delivery.suspended=true blocks new orders on the server too (not just in the UI).
+    function shopAcceptsOrders(shopId) {
+      return get(/databases/$(database)/documents/shops/$(shopId)).data.get('isOpen', true) == true
+        && shopDelivery(shopId).get('suspended', false) == false;
+    }
+    function feeFor(shopId) {
+      return shopDelivery(shopId).get('deliveryFee', 0);
+    }
+    function minFor(shopId) {
+      return shopDelivery(shopId).get('minimumOrderAmount', 0);
+    }
+    // Phone is VERIFIED when the sign-in token carries a phone_number (set by Firebase after an SMS OTP).
+    function phoneVerified() {
+      return signedIn() && 'phone_number' in request.auth.token;
+    }
+    function ownsPhone(p10) {
+      return phoneVerified() && request.auth.token.phone_number == '+91' + p10;
+    }
+    function profileOf(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
     // Nearby / delivery settings a shopkeeper may keep on their own approved shop (Phase 3).
     function validLocation(l) {
       return l is map
@@ -62,7 +89,10 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['name','phone','role','status','createdAt'])
         && request.resource.data.role in ['customer','shopkeeper']
         && request.resource.data.status == 'active'
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.phone is string
+        && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
+        && ownsPhone(request.resource.data.phone);
 
       allow update: if request.auth != null
         && request.auth.uid == uid
@@ -70,6 +100,7 @@ service cloud.firestore {
         && request.resource.data.status == resource.data.status
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.keys().hasOnly(['name','phone','role','status','createdAt','address'])
+        && (request.resource.data.phone == resource.data.phone || ownsPhone(request.resource.data.phone))
         && (!('address' in request.resource.data)
             || (request.resource.data.address is string
                 && request.resource.data.address.size() >= 5
@@ -78,6 +109,7 @@ service cloud.firestore {
 
     match /shops/{shopId} {
       allow create: if isRole('shopkeeper')
+        && phoneVerified()
         && request.auth.uid == shopId
         && request.resource.data.keys().hasOnly(
              ['ownerUid','name','address','category','phone','status','createdAt'])
@@ -191,13 +223,15 @@ service cloud.firestore {
 
     match /orders/{orderId} {
       allow create: if isRole('customer')
+        && phoneVerified()
         && request.resource.data.keys().hasOnly(
-             ['customerUid','shopId','shopName','items','total','address','phone','paymentMethod','status','createdAt'])
+             ['customerUid','shopId','shopName','items','subtotal','deliveryFee','total','address','phone','paymentMethod','status','createdAt'])
         && request.resource.data.customerUid == request.auth.uid
         && request.resource.data.status == 'placed'
         && request.resource.data.paymentMethod == 'COD'
         && request.resource.data.createdAt == request.time
         && shopStatus(request.resource.data.shopId) == 'approved'
+        && shopAcceptsOrders(request.resource.data.shopId)
         && request.resource.data.shopName ==
              get(/databases/$(database)/documents/shops/$(request.resource.data.shopId)).data.name
         && request.resource.data.address is string
@@ -209,35 +243,60 @@ service cloud.firestore {
         && request.resource.data.items.size() >= 1
         && request.resource.data.items.size() <= 5
         && distinct(request.resource.data.items)
-        && request.resource.data.total ==
+        && request.resource.data.subtotal ==
              line(request.resource.data.items, 0) + line(request.resource.data.items, 1)
              + line(request.resource.data.items, 2) + line(request.resource.data.items, 3)
              + line(request.resource.data.items, 4)
+        && request.resource.data.deliveryFee == feeFor(request.resource.data.shopId)
+        && request.resource.data.total == request.resource.data.subtotal + request.resource.data.deliveryFee
+        && request.resource.data.subtotal >= minFor(request.resource.data.shopId)
         && itemOk(request.resource.data.shopId, request.resource.data.items, 0)
         && itemOk(request.resource.data.shopId, request.resource.data.items, 1)
         && itemOk(request.resource.data.shopId, request.resource.data.items, 2)
         && itemOk(request.resource.data.shopId, request.resource.data.items, 3)
         && itemOk(request.resource.data.shopId, request.resource.data.items, 4);
 
+      // Riders see the open pool (status == accepted: accepting an order and claiming it are one step,
+      // so an `accepted` order never has a rider yet) and the orders they claimed themselves.
       allow read: if (signedIn() && resource.data.customerUid == request.auth.uid)
         || (signedIn() && resource.data.shopId == request.auth.uid)
+        || (isRole('delivery')
+            && (resource.data.status == 'accepted'
+                || resource.data.get('deliveryBoyId', '') == request.auth.uid))
         || isRole('admin');
 
+      // Shopkeeper: accept / reject only. Handing over to a rider and delivering are the rider's moves.
+      // Customer: cancel while still `placed`.
       allow update: if signedIn()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && (
           (resource.data.shopId == request.auth.uid
             && isRole('shopkeeper')
-            && ((resource.data.status == 'placed'
-                  && request.resource.data.status in ['accepted','rejected'])
-                || (resource.data.status == 'accepted'
-                  && request.resource.data.status == 'out_for_delivery')
-                || (resource.data.status == 'out_for_delivery'
-                  && request.resource.data.status == 'delivered')))
+            && resource.data.status == 'placed'
+            && request.resource.data.status in ['accepted','rejected'])
           || (resource.data.customerUid == request.auth.uid
             && resource.data.status == 'placed'
             && request.resource.data.status == 'cancelled')
         );
+
+      // Rider claims an accepted order: status -> out_for_delivery and deliveryBoyId = self in ONE write.
+      // The second rider to tap loses: by then the order is no longer `accepted`.
+      allow update: if isRole('delivery')
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','deliveryBoyId','riderName','riderPhone'])
+        && resource.data.status == 'accepted'
+        && !('deliveryBoyId' in resource.data)
+        && request.resource.data.status == 'out_for_delivery'
+        && request.resource.data.deliveryBoyId == request.auth.uid
+        && request.resource.data.riderName == profileOf(request.auth.uid).name
+        && request.resource.data.riderPhone == profileOf(request.auth.uid).phone;
+
+      // Only the rider who holds the order can mark it delivered.
+      allow update: if isRole('delivery')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && resource.data.get('deliveryBoyId', '') == request.auth.uid
+        && resource.data.status == 'out_for_delivery'
+        && request.resource.data.status == 'delivered';
 
       allow delete: if false;
     }
@@ -302,6 +361,12 @@ service cloud.firestore {
     match /wallets/{shopId} {
       allow read: if signedIn() && (request.auth.uid == shopId || isRole('admin'));
       allow write: if false;
+    }
+
+    // ---- role-change audit trail: written ONLY by the setDeliveryRole Cloud Function (Admin SDK bypasses rules).
+    // No client (not even admin) can read or write it from the browser.
+    match /roleAudit/{auditId} {
+      allow read, write: if false;
     }
 
     match /feedback/{fid} {

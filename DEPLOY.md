@@ -28,3 +28,70 @@ set field `role` to "admin" (rules block admin self-signup on purpose).
 - Clients can only READ their own wallet/ledger (firestore.rules). Deploy rules + indexes + functions:
   `firebase deploy --only firestore,functions`
 - Orders delivered before this function was deployed are not back-filled.
+
+## Step 6: delivery partners (admin panel -> "Delivery Partners")
+- New callable Cloud Functions (region `asia-south1`, `maxInstances: 3`): `setDeliveryRole`, `findUserByPhone`, `listDeliveryPartners`. Each one re-reads `users/{caller}.role` from Firestore and refuses anyone who is not `admin`.
+- Only `customer -> delivery` and `delivery -> customer` are allowed. Admin / shopkeeper accounts and your own account are never changed. A rider with an order where `deliveryBoyId == rider` and `status == out_for_delivery` cannot be removed.
+- Every change writes `roleAudit/{autoId}` (`actorUid, targetUid, from, to, createdAt`). Rules deny all client access to it; read it in Firebase Console.
+- Deploy (rules + functions + hosting, one command):
+      cd functions && npm install && npm test && cd ..
+      firebase deploy --only firestore:rules,functions,hosting
+  Callables need the Blaze plan, same as the other functions. No new Firestore index is needed.
+- First deploy of a callable: if the admin page says "Something went wrong", open Firebase Console -> Functions and check the three functions show up in `asia-south1`.
+- Rider accounts still sign up as `customer`; make them a rider from the panel. Role is changed on `users/{uid}` only, so the rider logs out and in again to be routed by the new role.
+
+## Step 7: offline app, live orders, order alerts, better cart
+- **Install + offline:** `service-worker.js` (was an empty file before) + `offline.html` + `shared/services/pwa.js` (loaded on every page). Pages, CSS and JS are pre-cached; after a deploy the app shows "Naya version aaya hai - Update". If you add a `.js`/`.css` file under `shared/` or `modules/`, add it to `PRECACHE` in `service-worker.js` (`node --test tests/*.test.mjs` fails and tells you which file is missing). Bump `VERSION` there to force everyone's cache to rebuild.
+- **Offline data:** Firestore now keeps a local cache (`shared/config/firebase.js`), so shops, products and old orders open without internet. Placing an order is blocked while offline. The cache is wiped on logout (shared phones).
+- **Live orders:** shopkeeper orders update by themselves; a new order gives a toast, beep, vibration and (if allowed) a phone notification, and the tab title shows "(n)". Customers get the same when a shop accepts / rejects / sends / delivers an order. These alerts work while the app is open or in the background. Alerts to a fully closed app need Firebase Cloud Messaging (VAPID key + sender function) and are NOT included.
+- **Cart:** photo, +/- buttons, per-item total, red warnings for sold-out / low-stock / removed items, order button disabled until fixed or while offline, double-tap protected, "Order track karein" button after ordering.
+- **Test after deploy (on a phone, HTTPS):** open the site, add to home screen, open it once online, switch on airplane mode, reopen: shops should load and the red "Internet nahi hai" strip should show. Then a second phone: place an order as customer while the shopkeeper page is open and check the alert.
+- Deploy: `firebase deploy --only hosting` (no rules or functions change in this step).
+
+
+## Step 8: rider assignment + delivery fee + minimum order
+- **Order flow now:** `placed` -> shop Accept -> `accepted` (open pool) -> a rider taps **Delivery lein** -> `out_for_delivery` (+ `deliveryBoyId`, `riderName`, `riderPhone` written in the SAME update, so only one rider can win) -> rider taps **Delivered** -> `delivered`. The shopkeeper can no longer move an order past `accepted` (firestore.rules).
+- **Rider page:** `delivery.html` (+ `modules/delivery/jobs.js`). A rider signs up as customer; admin -> Delivery Partners makes them a rider; they log out/in and land here. Riders can read only `accepted` orders and their own.
+- **Delivery fee + minimum order:** taken from the shop's own settings (`shops/{id}.delivery.deliveryFee / minimumOrderAmount`). New order fields: `subtotal`, `deliveryFee`, `total = subtotal + deliveryFee`. Rules reject a fee that differs from the shop's setting and a subtotal below the minimum.
+- **Commission:** charged on items (`subtotal`) only. Ledger rows now also hold `itemsPaise`, `deliveryFeePaise`, `riderId`. Old orders without `subtotal` still work (fee = 0).
+- **Before deploy:** (1) make at least one rider, otherwise accepted orders wait forever; (2) any order currently `out_for_delivery` from before this change has no `deliveryBoyId` and nobody can mark it delivered: finish those by hand in the Console first; (3) `cd functions && npm test`, `node --test tests/*.test.mjs`; (4) `firebase deploy --only firestore:rules,functions,hosting`. Rules were NOT run in the emulator here (firebase-tools is not installed in this sandbox and there is no internet): test claim / deliver / fee / minimum in `firebase emulators:start` before going live.
+- **Open question for the payout step:** the rider now collects the cash, but `wallets.commissionDuePaise` still assumes the shop holds it. Who pays whom (rider -> platform -> shop) is decided in the settlement step.
+
+## Step 9: mobile OTP + Google login
+**One-time Firebase Console setup (nothing works until this is done):**
+1. Authentication -> Sign-in method -> enable **Google** (set the support email) and **Phone**.
+2. Authentication -> Settings -> Authorized domains: make sure `mandawar-local.web.app`, `mandawar-local.firebaseapp.com` and your own domain (if any) are listed.
+3. Authentication -> Settings -> SMS region policy: allow **India (IN)**.
+4. SMS costs: the free Spark plan has a very small daily SMS allowance; real users need the **Blaze** plan (you already need it for functions). While testing, add fake numbers under Phone -> "Phone numbers for testing" (no real SMS is sent or billed).
+5. Deploy: `firebase deploy --only firestore:rules,hosting`.
+
+**What changed**
+- `login.html` / `modules/auth/login.js`: Google button, "mobile OTP login", and one OTP screen used by every flow. Signup = email + password -> OTP -> profile is created. Google or phone login with no profile yet -> "complete your profile" (name, role, and a number to verify if the login has none).
+- `firestore.rules`: `users` create needs `request.auth.token.phone_number == '+91' + phone` (the number is really OTP-verified and cannot be faked from the browser); a profile's phone can change only to a verified number; **placing an order** and **registering a shop** need a verified number.
+- **Existing users** (signed up before OTP) are not locked out of login. They see a "Verify number" banner on the customer / shopkeeper pages, and cannot order or register a shop until they verify.
+- Riders and admins: riders were customers first so they are already verified; admin accounts are untouched.
+- Still not done: email verification for password accounts, App Check (reCAPTCHA keys) for the SMS endpoint, and changing the phone number later (the field is read-only on purpose).
+
+## Step 10: OTP + Firebase security hardening
+**Code changes (already in this zip)**
+- `shared/services/otp-guard.js`: resend wait doubles (30s, 60s, 2m, 4m, 8m), max 5 OTPs per number and 8 per phone per hour, 5 wrong codes lock that number for 15 minutes. Used by the login page and the "verify number" sheet. It protects against accidents and Send-button hammering; it is NOT a security boundary (a user can clear localStorage). The real limits are the Console settings below.
+- **App Check (website side):** `shared/config/firebase.js` -> `APP_CHECK_SITE_KEY`. Empty = off, nothing changes. Cloud Functions read `ENFORCE_APP_CHECK` from `functions/.env` (0 = off).
+- **Order flood guard:** new function `guardOrderFlood`. If a customer already has 3 other orders waiting at `placed`, or 5 other orders in the last 10 minutes, the NEW order is cancelled (reason in `cancelReason`) and stock is restored by `restoreStockOnClose`. New index: orders `customerUid + createdAt` (deploy indexes first, or the function logs an index error).
+- **Rules:** a shop with `isOpen == false` or `delivery.suspended == true` can no longer receive orders even if someone bypasses the UI.
+- **Headers:** HSTS and `Cross-Origin-Opener-Policy: same-origin-allow-popups` (needed for Google sign-in popup) are on. A `Content-Security-Policy-Report-Only` header is added: it blocks nothing, it only logs violations in the browser console. Browse every page once, fix anything it complains about, then rename it to `Content-Security-Policy`.
+
+**Firebase Console checklist, in this order**
+1. **API key restriction (do this first, 5 minutes):** Google Cloud Console -> APIs & Services -> Credentials -> the "Browser key" used in `firebaseConfig` -> Application restrictions: HTTP referrers -> add `https://mandawar-local.web.app/*`, `https://mandawar-local.firebaseapp.com/*` and your own domain. The key stays public, but it then only works from your websites.
+2. **SMS region policy:** Authentication -> Settings -> SMS region policy -> Allow only India. Blocks SMS-pumping to foreign numbers.
+3. **Budget alert:** Billing -> Budgets & alerts -> set a monthly budget (e.g. Rs 500) with alerts at 50/90/100 percent. A bot that gets past everything else is then noticed within hours, not at month end.
+4. **App Check:** App Check -> Apps -> your web app -> register **reCAPTCHA v3** (create the key at google.com/recaptcha/admin, add your domains), paste the SITE key into `APP_CHECK_SITE_KEY`, deploy hosting.
+   - Wait 2-3 days. App Check -> APIs shows the share of verified requests per product (Firestore, Functions, Authentication).
+   - When Firestore and Authentication show nearly 100% verified, click **Enforce** on them. Then, in `functions/.env`, set `ENFORCE_APP_CHECK=1` and redeploy functions.
+   - Local testing: open the site on `localhost` once, copy the debug token from the browser console into App Check -> Manage debug tokens.
+   - Enforcing too early locks out real users, and anyone with a cached old version of the app (this build bumps the service worker to v4 so they update).
+5. **reCAPTCHA / SMS fraud protection (optional, strongest):** upgrade Authentication to Identity Platform and turn on "SMS toll fraud protection" under Authentication -> Settings.
+6. **Admin accounts:** keep the number of admins tiny; admin = a field `role: "admin"` on `users/{uid}` set by you in the Console (rules block self-signup as admin). Use a Google account with 2-step verification for the Console itself.
+
+**Deploy:** `firebase deploy --only firestore:rules,firestore:indexes,functions,hosting`
+
+**Not tested here:** the sandbox has no firebase-tools / emulator and no internet, so the rules (including the new shop-open check) and the real OTP and App Check flows have only been reviewed, not run. Pure logic (OTP guard, abuse guard, commission, cart, events) is unit-tested.

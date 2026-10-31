@@ -2,8 +2,12 @@
 // Everything money-related is stored as integer PAISE to avoid floating point drift.
 //
 // Model (COD only, which is all the app supports today):
-//   The shopkeeper collects the full cash from the customer, so the shopkeeper OWES the platform
-//   its commission. wallets/{shopId}.commissionDuePaise is that running amount.
+//   Commission is charged on the ITEMS amount only. The delivery charge is not the shop's sale, so it is
+//   never part of the commission base or of totalSalesPaise; it is stored separately on the ledger row.
+//   wallets/{shopId}.commissionDuePaise is the running commission the shop owes the platform.
+//   NOTE: with rider delivery the RIDER collects the cash, not the shop. This file does not yet say who
+//   pays whom (that is the payout/settlement step); the ledger row records riderId + deliveryFeePaise so
+//   that step has the facts it needs.
 //   ledger/{orderId} is one immutable row per delivered order (doc id = orderId => at most one).
 
 const MAX_RATE_PERCENT = 100;
@@ -42,6 +46,12 @@ async function recordCommissionForOrder({ db, orderId, now }) {
     if (typeof order.shopId !== "string" || !order.shopId) return { recorded: false, reason: "no-shop" };
     const totalPaise = toPaise(order.total);
     if (totalPaise === null) return { recorded: false, reason: "bad-total" };
+    // Orders placed before delivery charges existed have no subtotal/deliveryFee: items = total, fee = 0.
+    const hasSplit = order.subtotal !== undefined || order.deliveryFee !== undefined;
+    const itemsPaise = hasSplit ? toPaise(order.subtotal) : totalPaise;
+    const feePaise = hasSplit ? toPaise(order.deliveryFee) : 0;
+    if (itemsPaise === null || feePaise === null || itemsPaise + feePaise !== totalPaise)
+      return { recorded: false, reason: "bad-total" };
     if (order.paymentMethod !== "COD") return { recorded: false, reason: "unsupported-payment-method" };
 
     const walletRef = db.collection("wallets").doc(order.shopId);
@@ -53,19 +63,21 @@ async function recordCommissionForOrder({ db, orderId, now }) {
     if (ledgerSnap.exists) return { recorded: false, reason: "already-recorded" };
 
     const ratePercent = parseRatePercent(cfgSnap.exists ? cfgSnap.data() : null);
-    const commissionPaise = computeCommissionPaise(totalPaise, ratePercent);
+    const commissionPaise = computeCommissionPaise(itemsPaise, ratePercent);
     const w = walletSnap.exists ? walletSnap.data() : {};
     const num = (v) => (Number.isInteger(v) ? v : 0);
 
     tx.set(ledgerRef, {
       orderId, shopId: order.shopId, type: "commission", paymentMethod: order.paymentMethod,
-      orderTotalPaise: totalPaise, ratePercent, commissionPaise, createdAt: now()
+      orderTotalPaise: totalPaise, itemsPaise, deliveryFeePaise: feePaise,
+      riderId: typeof order.deliveryBoyId === "string" ? order.deliveryBoyId : null,
+      ratePercent, commissionPaise, createdAt: now()
     });
     tx.set(walletRef, {
       shopId: order.shopId,
       commissionDuePaise: num(w.commissionDuePaise) + commissionPaise,
       totalCommissionPaise: num(w.totalCommissionPaise) + commissionPaise,
-      totalSalesPaise: num(w.totalSalesPaise) + totalPaise,
+      totalSalesPaise: num(w.totalSalesPaise) + itemsPaise,
       deliveredOrders: num(w.deliveredOrders) + 1,
       updatedAt: now()
     });

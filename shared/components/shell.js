@@ -26,6 +26,7 @@ const ICONS = {
   profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
   pending: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   shops: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  rider: '<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l3-7h5l4 7M9 10L7.5 7H5M14 10l-1.5-3H11"/>',
   logout: '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
@@ -39,7 +40,7 @@ const ICONS = {
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>'
 };
-const ROLE_KEY = { customer: "roleCustomer", shopkeeper: "roleShopkeeper", admin: "roleAdmin" };
+const ROLE_KEY = { customer: "roleCustomer", shopkeeper: "roleShopkeeper", admin: "roleAdmin", delivery: "roleDelivery" };
 
 function svg(name) {
   const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -239,6 +240,7 @@ export function mountShell(cfg) {
       const nameI = el("input"); nameI.value = profile.name || ""; nameI.maxLength = 60; nameI.autocomplete = "name";
       const phoneI = el("input"); phoneI.value = profile.phone || ""; phoneI.maxLength = 10;
       phoneI.inputMode = "numeric"; phoneI.autocomplete = "tel-national";
+      phoneI.readOnly = true;   // the number is OTP-verified; changing it needs a new OTP (firestore.rules)
       const m = msgLine();
       const save = btn(t("save"));
       save.onclick = async () => {
@@ -257,7 +259,7 @@ export function mountShell(cfg) {
           save.disabled = false;
         }
       };
-      body.append(field(t("name"), nameI), field(t("phone"), phoneI), m, save);
+      body.append(field(t("name"), nameI), field(t("phone"), phoneI), el("p", "sheet-hint", t("phoneLocked")), m, save);
     });
   }
 

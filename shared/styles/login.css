@@ -73,3 +73,18 @@
 .is-signup .hb { display:none; }
 @media (prefers-reduced-motion: reduce) { .row { animation:none; } }
 @media (max-height:640px) { .sheet .sub { margin-bottom:10px; } .field input, .field select, .cta { height:48px; } }
+
+/* ---- Google button, OTP / profile views ---- */
+.gbtn { width:100%; height:54px; display:flex; align-items:center; justify-content:center; gap:12px; border-radius:999px; border:1.5px solid var(--border); background:var(--surface); color:var(--text, #14251C); font:inherit; font-size:1.02rem; font-weight:600; cursor:pointer; }
+.gbtn:active { transform:scale(.98); }
+.gbtn:disabled { opacity:.6; cursor:wait; }
+.vform { display:grid; gap:12px; }
+.vmsg { min-height:0; margin:0; font-size:.88rem; color:var(--danger); }
+.vmsg:empty { display:none; }
+.vmsg.good { color:var(--primary); }
+.otp-input { letter-spacing:.45em; font-weight:700; font-size:1.2rem !important; }
+.linkbtn { background:none; border:0; font:inherit; font-weight:600; color:var(--primary); padding:6px 0; cursor:pointer; }
+.linkbtn:disabled { color:var(--muted); cursor:default; }
+.alt.alt2 { padding-top:0; }
+.alt.back { color:var(--muted); font-weight:600; font-size:.95rem; }
+#recaptcha-box { position:fixed; left:0; bottom:0; }

@@ -19,6 +19,7 @@
 </head>
 <body>
   <script src="./shared/components/splash.js"></script>
+  <script type="module" src="./shared/services/pwa.js"></script>
   <header class="topbar">
     <a class="brand" href="./"><img src="./assets/brand/mark.png" alt="Mandawar logo"><span class="brand-txt"><span class="brand-name">Mandawar</span><small>Your Local Marketplace</small></span></a>
     <button class="category" id="cart-btn" type="button">Cart</button>
@@ -82,14 +83,18 @@
     import { initAddress } from "./modules/customer/address.js";
     import { initCartView } from "./modules/customer/cart-view.js";
     import { initMyOrders } from "./modules/customer/my-orders.js";
+    import { startOrderAlerts } from "./modules/customer/order-alerts.js";
+    import { notifyPrompt } from "./shared/services/notify.js";
     const $ = (id) => document.getElementById(id);
 
     requireRole("customer", (user, profile) => {
       $("welcome").textContent = "Namaste, " + profile.name;
       initAddress(user, profile);
-      initCartView(user, profile);
+      initCartView(user, profile, { onPlaced: () => shell.go("orders") });
       initBrowse();
       const refreshOrders = initMyOrders(user, { onReorder: () => shell.go("cart") });
+      $("orders-section").insertBefore(notifyPrompt(), $("my-order-list"));
+      startOrderAlerts(user, { onChange: () => { if (shell.current() === "orders") refreshOrders(); } });
       const nearby = initNearby({
         root: $("nearby-root"),
         onBrowseAll: () => shell.go("home"),
