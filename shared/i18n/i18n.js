@@ -72,7 +72,27 @@ const STRINGS = {
     // ---- about sheet
     aboutTitle: "Mandawar के बारे में",
     aboutText: "Mandawar आपके शहर की दुकानों को एक ऐप में लाता है, ताकि आप घर बैठे ऑर्डर कर सकें।",
-    aboutPlace: "स्थान"
+    aboutPlace: "स्थान",
+
+    // ---- nearby dashboard (Phase 3A)
+    nbDeliverTo: "डिलीवरी का स्थान", nbChange: "बदलें", nbLocGps: "आपकी मौजूदा लोकेशन", nbLocManual: "चुनी हुई लोकेशन", nbLocSaved: "सेव की हुई लोकेशन",
+    nbSearchPh: "आस-पास की दुकानें खोजें", nbAllCats: "सभी", nbMap: "नक्शा", nbList: "सूची", nbShowOnMap: "नक्शे पर देखें",
+    nbNeedTitle: "देखें कौन-सी दुकानें आपके यहाँ डिलीवर करती हैं",
+    nbNeedBody: "आस-पास की दुकानें और उनका डिलीवरी क्षेत्र दिखाने के लिए एक बार लोकेशन की अनुमति दें। हम बैकग्राउंड में आपको ट्रैक नहीं करते।",
+    nbAllow: "मेरी लोकेशन इस्तेमाल करें", nbPickMap: "नक्शे पर चुनें", nbBrowseAll: "सभी दुकानें देखें",
+    nbLocating: "आपकी लोकेशन ढूँढ रहे हैं…", nbCancel: "रद्द करें", nbRetry: "दोबारा कोशिश करें",
+    nbProblemTitle: "लोकेशन नहीं मिल पाई", nbLoadingA11y: "आस-पास की दुकानें लोड हो रही हैं",
+    nbErrTitle: "आस-पास की दुकानें लोड नहीं हो पाईं", nbErrBody: "इंटरनेट जाँचें और दोबारा कोशिश करें। इसका मतलब यह नहीं कि पास में दुकानें नहीं हैं।",
+    nbEmptyTitle: "आपके आस-पास अभी कोई दुकान नहीं मिली", nbEmptyBody: "इस लोकेशन के पास अभी कोई मंज़ूर की हुई दुकान तैयार नहीं है। दूसरी लोकेशन आज़माएँ या सभी दुकानें देखें।",
+    nbEmptySearchTitle: "कोई दुकान मेल नहीं खाती", nbEmptySearchBody: "खोज या कैटेगरी बदलकर देखें।", nbClearFilters: "फ़िल्टर हटाएँ",
+    nbSummary: "{n} दुकानें आपके यहाँ डिलीवर करती हैं", nbSummaryOther: "{n} पास की दुकानें अभी उपलब्ध नहीं", nbNoneDeliver: "अभी कोई दुकान आपके यहाँ डिलीवर नहीं करती",
+    nbDistNote: "दूरी सीधी रेखा में है, सड़क से नहीं।", nbTruncated: "इस इलाके की कुछ दुकानें सूची में नहीं दिख रही होंगी।",
+    nbMapUnavailable: "नक्शा लोड नहीं हुआ। अभी सिर्फ़ सूची दिख रही है।",
+    nbStatus_DELIVERABLE: "आपके यहाँ डिलीवर करती है", nbStatus_CLOSED: "अभी बंद है", nbStatus_OUTSIDE_DELIVERY_AREA: "डिलीवरी क्षेत्र से बाहर",
+    nbStatus_TEMPORARILY_UNAVAILABLE: "डिलीवरी अभी रुकी है", nbStatus_DELIVERY_UNAVAILABLE: "डिलीवरी नहीं करती", nbStatus_LOCATION_UNAVAILABLE: "दुकान की लोकेशन तय नहीं",
+    nbStatus_PENDING_APPROVAL: "उपलब्ध नहीं",
+    nbAway: "{d} दूर", nbFee: "डिलीवरी {n}", nbFeeFree: "फ़्री डिलीवरी", nbMinOrder: "कम से कम ऑर्डर {n}", nbPrep: "तैयारी ~{n} मिनट", nbRadius: "{n} किमी तक डिलीवरी",
+    nbView: "सामान देखें", nbSelectedShop: "चुनी हुई दुकान",
   },
 
   en: {
@@ -141,7 +161,27 @@ const STRINGS = {
     // ---- about sheet
     aboutTitle: "About Mandawar",
     aboutText: "Mandawar brings every local shop in your town into one app, so you can order from home.",
-    aboutPlace: "Location"
+    aboutPlace: "Location",
+
+    // ---- nearby dashboard (Phase 3A)
+    nbDeliverTo: "Delivering to", nbChange: "Change", nbLocGps: "Your current location", nbLocManual: "Pinned location", nbLocSaved: "Saved location",
+    nbSearchPh: "Search shops nearby", nbAllCats: "All", nbMap: "Map", nbList: "List", nbShowOnMap: "Show on map",
+    nbNeedTitle: "See which shops deliver to you",
+    nbNeedBody: "Allow your location once so we can show nearby shops and their delivery areas. We never track you in the background.",
+    nbAllow: "Use my location", nbPickMap: "Choose on map", nbBrowseAll: "Browse all shops",
+    nbLocating: "Finding your location…", nbCancel: "Cancel", nbRetry: "Try again",
+    nbProblemTitle: "Couldn't get your location", nbLoadingA11y: "Loading nearby shops",
+    nbErrTitle: "Couldn't load nearby shops", nbErrBody: "Check your connection and try again. This does not mean there are no shops nearby.",
+    nbEmptyTitle: "No shops found near you yet", nbEmptyBody: "No approved shop is set up around this location yet. Try another location or browse all shops.",
+    nbEmptySearchTitle: "No shop matches", nbEmptySearchBody: "Try a different search or category.", nbClearFilters: "Clear filters",
+    nbSummary: "{n} shops deliver to you", nbSummaryOther: "{n} nearby shops not available right now", nbNoneDeliver: "No shop delivers to you right now",
+    nbDistNote: "Distances are straight-line, not by road.", nbTruncated: "Some shops in this area may not be listed.",
+    nbMapUnavailable: "The map could not load. Showing the list only.",
+    nbStatus_DELIVERABLE: "Delivers to you", nbStatus_CLOSED: "Closed now", nbStatus_OUTSIDE_DELIVERY_AREA: "Outside delivery area",
+    nbStatus_TEMPORARILY_UNAVAILABLE: "Delivery paused", nbStatus_DELIVERY_UNAVAILABLE: "Delivery not offered", nbStatus_LOCATION_UNAVAILABLE: "Shop location not set",
+    nbStatus_PENDING_APPROVAL: "Not available",
+    nbAway: "{d} away", nbFee: "Delivery {n}", nbFeeFree: "Free delivery", nbMinOrder: "Min order {n}", nbPrep: "Prep ~{n} min", nbRadius: "Delivers within {n} km",
+    nbView: "View items", nbSelectedShop: "Selected shop",
   }
 };
 
