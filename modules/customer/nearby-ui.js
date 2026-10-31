@@ -7,7 +7,8 @@
 //                                              onRetry, onBrowseAll, onSelectShop, onOpenShop, onSearch, onCategory });
 //   ui.setState({ locationState, location, locationError, discovery, mapStatus, selectedId })
 //   discovery = { status: 'idle'|'loading'|'error'|'ready', entries: [{shop, eligibility}], stats }
-//   mapStatus = 'pending' | 'ready' | 'failed'   ('failed' => list-only fallback)
+//   mapStatus = 'pending' | 'ready' | 'failed' | 'off'   ('failed' => list-only + "map could not load" note; 'off' => list-only, no map at all)
+//   onPickOnMap is optional: without it the "Choose on map" buttons are not drawn.
 import { t, getLang } from "../../shared/i18n/i18n.js";
 import { CATEGORIES, catImg } from "../../shared/config/categories.js";
 import { Screen, resolveScreen, filterEntries, summarizeEntries, toCardModel } from "./nearby-view-model.js";
@@ -116,7 +117,7 @@ export function createNearbyDashboard(root, handlers = {}) {
     if (v === "map") queueMicrotask(() => h("onMapShown")());   // 3C: map.invalidateSize()
   }
   function paintToggle() {
-    const mapOk = state.mapStatus !== "failed";
+    const mapOk = mapOn();
     toggle.hidden = !mapOk || !hasLocation();
     if (!mapOk && view === "map") view = "list";
     tList.setAttribute("aria-pressed", String(view === "list"));
@@ -142,7 +143,7 @@ export function createNearbyDashboard(root, handlers = {}) {
     locLabel.textContent = t("nbDeliverTo");
     locName.textContent = hasLocation() ? locationTitle() : t("nbNeedTitle");
     locChange.textContent = t("nbChange");
-    locBtn.setAttribute("aria-label", t("nbChange") + ": " + (hasLocation() ? locationTitle() : t("nbPickMap")));
+    locBtn.setAttribute("aria-label", t("nbChange") + ": " + (hasLocation() ? locationTitle() : t("nbAllow")));
     searchInput.placeholder = t("nbSearchPh");
     searchInput.setAttribute("aria-label", t("nbSearchPh"));
     tList.lastChild.textContent = t("nbList");
@@ -152,16 +153,20 @@ export function createNearbyDashboard(root, handlers = {}) {
     paintToggle();
   }
   const hasLocation = () => !!state.location;
+  const mapOn = () => state.mapStatus !== "failed" && state.mapStatus !== "off";
 
   // -- state panels
   function panel(kind, title, bodyText, actions) {
     const p = el("div", "nb-panel nb-panel--" + kind);
     p.appendChild(el("h2", "nb-panel-title", title));
     if (bodyText) p.appendChild(el("p", "nb-panel-body", bodyText));
+    actions = actions.filter(Boolean);
     if (actions.length) { const a = el("div", "nb-panel-actions"); a.append(...actions); p.appendChild(a); }
     return p;
   }
   const browseAll = () => btn("nb-btn--ghost", t("nbBrowseAll"), () => h("onBrowseAll")());
+  const pickOnMap = (primary = false) => typeof handlers.onPickOnMap === "function"
+    ? btn(primary ? "" : "nb-btn--ghost", t("nbPickMap"), () => h("onPickOnMap")(), { primary }) : null;
 
   function skeletons() {
     const wrap = el("div", "nb-skeletons");
@@ -202,7 +207,7 @@ export function createNearbyDashboard(root, handlers = {}) {
       open.setAttribute("aria-label", t("nbView") + ": " + m.name);
       actions.appendChild(open);
     }
-    if (state.mapStatus !== "failed" && m.mappable) {
+    if (mapOn() && m.mappable) {
       const show = btn("nb-btn--ghost nb-show-map", t("nbShowOnMap"), (e) => {
         e.stopPropagation(); h("onSelectShop")(m.id, entry); setView("map");
       });
@@ -230,7 +235,7 @@ export function createNearbyDashboard(root, handlers = {}) {
       case Screen.NEEDS_LOCATION:
         centered.appendChild(panel("info", t("nbNeedTitle"), t("nbNeedBody"), [
           btn("", t("nbAllow"), () => h("onRequestLocation")(), { primary: true }),
-          btn("nb-btn--ghost", t("nbPickMap"), () => h("onPickOnMap")()),
+          pickOnMap(),
           browseAll()]));
         break;
       case Screen.LOCATING:
@@ -239,7 +244,7 @@ export function createNearbyDashboard(root, handlers = {}) {
       case Screen.LOCATION_PROBLEM:
         centered.appendChild(panel("error", t("nbProblemTitle"), errMsg || "", [
           btn("", t("nbRetry"), () => h("onRequestLocation")(), { primary: true }),
-          btn("nb-btn--ghost", t("nbPickMap"), () => h("onPickOnMap")()),
+          pickOnMap(),
           browseAll()]));
         break;
       case Screen.LOADING:
@@ -251,7 +256,7 @@ export function createNearbyDashboard(root, handlers = {}) {
         break;
       case Screen.EMPTY_NONE:
         listCol.appendChild(panel("empty", t("nbEmptyTitle"), t("nbEmptyBody"), [
-          btn("", t("nbPickMap"), () => h("onPickOnMap")(), { primary: true }), browseAll()]));
+          pickOnMap(true), browseAll()]));
         break;
       case Screen.EMPTY_SEARCH:
         listCol.appendChild(panel("empty", t("nbEmptySearchTitle"), t("nbEmptySearchBody"), [
@@ -274,6 +279,7 @@ export function createNearbyDashboard(root, handlers = {}) {
     mapNote.hidden = state.mapStatus !== "failed";
     mapNote.textContent = t("nbMapUnavailable");
     mapCol.classList.toggle("is-failed", state.mapStatus === "failed");
+    mapCol.classList.toggle("is-off", state.mapStatus === "off");
   }
 
   function clearFilters() {

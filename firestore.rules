@@ -16,6 +16,27 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/shops/$(shopId)).data.status;
     }
 
+    // Nearby / delivery settings a shopkeeper may keep on their own approved shop (Phase 3).
+    function validLocation(l) {
+      return l is map
+        && l.keys().hasOnly(['latitude','longitude'])
+        && l.latitude is number && l.latitude >= -90 && l.latitude <= 90
+        && l.longitude is number && l.longitude >= -180 && l.longitude <= 180;
+    }
+
+    function validDelivery(d) {
+      return d is map
+        && d.keys().hasOnly(['enabled','radiusKm','deliveryFee','minimumOrderAmount',
+                             'estimatedPreparationMinutes','suspended'])
+        && (!('enabled' in d) || d.enabled is bool)
+        && (!('suspended' in d) || d.suspended is bool)
+        && (!('radiusKm' in d) || (d.radiusKm is number && d.radiusKm > 0 && d.radiusKm <= 50))
+        && (!('deliveryFee' in d) || (d.deliveryFee is number && d.deliveryFee >= 0 && d.deliveryFee <= 500))
+        && (!('minimumOrderAmount' in d) || (d.minimumOrderAmount is number && d.minimumOrderAmount >= 0 && d.minimumOrderAmount <= 10000))
+        && (!('estimatedPreparationMinutes' in d)
+            || (d.estimatedPreparationMinutes is int && d.estimatedPreparationMinutes >= 0 && d.estimatedPreparationMinutes <= 240));
+    }
+
     function validProduct(d) {
       return d.keys().hasOnly(['name','price','unit','stock','active','createdAt','lastOrderId','image'])
         && (!('image' in d)
@@ -83,6 +104,14 @@ service cloud.firestore {
       allow update: if isRole('admin')
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status in ['approved','rejected','pending'];
+
+      allow update: if isRole('shopkeeper')
+        && request.auth.uid == shopId
+        && resource.data.status == 'approved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isOpen','location','delivery'])
+        && (!('isOpen' in request.resource.data) || request.resource.data.isOpen is bool)
+        && (!('location' in request.resource.data) || validLocation(request.resource.data.location))
+        && (!('delivery' in request.resource.data) || validDelivery(request.resource.data.delivery));
 
       allow delete: if false;
 
@@ -262,6 +291,17 @@ service cloud.firestore {
                == get(/databases/$(database)/documents/orders/$(orderId)).data.items.size());
 
       allow delete: if false;
+    }
+
+    // ---- money: written ONLY by Cloud Functions (Admin SDK bypasses rules). Clients can only read their own.
+    match /ledger/{orderId} {
+      allow read: if signedIn() && (resource.data.shopId == request.auth.uid || isRole('admin'));
+      allow write: if false;
+    }
+
+    match /wallets/{shopId} {
+      allow read: if signedIn() && (request.auth.uid == shopId || isRole('admin'));
+      allow write: if false;
     }
 
     match /feedback/{fid} {

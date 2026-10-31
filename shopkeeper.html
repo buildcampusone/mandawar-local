@@ -29,6 +29,8 @@
 
     <p id="shop-status" data-panel="shop" hidden></p>
 
+    <section id="shop-settings" data-panel="shop" hidden></section>
+
     <form id="shop-form" data-panel="shop" style="max-width:420px" hidden>
       <h2>Apni dukaan register karein</h2>
       <input id="shop-name" placeholder="Dukaan ka naam" maxlength="60" required>
@@ -65,6 +67,7 @@
     import { initShop } from "./modules/shopkeeper/shop-register.js";
     import { initProducts } from "./modules/shopkeeper/products.js";
     import { initOrders } from "./modules/shopkeeper/orders.js";
+    import { initShopSettings } from "./modules/shopkeeper/shop-settings.js";
     const $ = (id) => document.getElementById(id);
     const STATUS = { pending: "Approval pending", approved: "Approved", rejected: "Reject hui" };
 
@@ -76,7 +79,7 @@
       $("welcome").textContent = "Namaste, " + profile.name;
       const shop = await initShop(user, profile);
       const approved = !!shop && shop.status === "approved";
-      if (approved) { initProducts(user); initOrders(user); }
+      if (approved) { initProducts(user); initOrders(user); initShopSettings(user, shop); }
 
       mountShell({
         role: "shopkeeper", user, profile,

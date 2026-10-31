@@ -93,6 +93,21 @@ const STRINGS = {
     nbStatus_PENDING_APPROVAL: "उपलब्ध नहीं",
     nbAway: "{d} दूर", nbFee: "डिलीवरी {n}", nbFeeFree: "फ़्री डिलीवरी", nbMinOrder: "कम से कम ऑर्डर {n}", nbPrep: "तैयारी ~{n} मिनट", nbRadius: "{n} किमी तक डिलीवरी",
     nbView: "सामान देखें", nbSelectedShop: "चुनी हुई दुकान",
+    navNearby: "आस-पास", shNearby: "आस-पास",
+    nbLocDenied: "लोकेशन की अनुमति नहीं मिली। फ़ोन की सेटिंग में अनुमति देकर दोबारा कोशिश करें।",
+    nbLocUnavailable: "इस फ़ोन पर लोकेशन उपलब्ध नहीं है। GPS चालू करके दोबारा कोशिश करें।",
+    nbLocTimeout: "लोकेशन मिलने में बहुत समय लगा। दोबारा कोशिश करें।", nbLocError: "लोकेशन पढ़ते समय गड़बड़ हुई। दोबारा कोशिश करें।",
+
+    // ---- shopkeeper: delivery & location settings
+    ssTitle: "डिलीवरी और लोकेशन",
+    ssIntro: "ग्राहकों को आपकी दुकान \"आस-पास\" में तभी डिलीवर करती दिखेगी जब यहाँ लोकेशन और डिलीवरी सेट होगी।",
+    ssOpen: "दुकान अभी खुली है", ssDelivery: "होम डिलीवरी करते हैं", ssPaused: "डिलीवरी अभी रोकें",
+    ssRadius: "डिलीवरी दूरी (किमी)", ssFee: "डिलीवरी चार्ज (Rs)", ssMin: "कम से कम ऑर्डर (Rs)", ssPrep: "तैयारी का समय (मिनट)",
+    ssUseGps: "दुकान की लोकेशन सेट करें", ssGpsHint: "दुकान में खड़े होकर दबाएँ, ताकि लोकेशन सही आए।",
+    ssLocSet: "दुकान की लोकेशन सेट है", ssLocNotSet: "दुकान की लोकेशन अभी सेट नहीं है", ssLocating: "लोकेशन ढूँढ रहे हैं…",
+    ssAccuracy: "सटीकता लगभग {n} मीटर", ssSave: "सेव करें", ssSaved: "सेव हो गया।", ssNeedLoc: "डिलीवरी चालू करने से पहले दुकान की लोकेशन सेट करें।",
+    ssBadRadius: "डिलीवरी दूरी 0.5 से 50 किमी के बीच होनी चाहिए।", ssBadFee: "डिलीवरी चार्ज 0 से 500 के बीच होना चाहिए।",
+    ssBadMin: "कम से कम ऑर्डर 0 से 10000 के बीच होना चाहिए।", ssBadPrep: "तैयारी का समय 0 से 240 मिनट के बीच पूरा अंक होना चाहिए।",
   },
 
   en: {
@@ -182,6 +197,21 @@ const STRINGS = {
     nbStatus_PENDING_APPROVAL: "Not available",
     nbAway: "{d} away", nbFee: "Delivery {n}", nbFeeFree: "Free delivery", nbMinOrder: "Min order {n}", nbPrep: "Prep ~{n} min", nbRadius: "Delivers within {n} km",
     nbView: "View items", nbSelectedShop: "Selected shop",
+    navNearby: "Nearby", shNearby: "Nearby",
+    nbLocDenied: "Location permission was not given. Allow it in your phone settings and try again.",
+    nbLocUnavailable: "Location is not available on this phone. Turn on GPS and try again.",
+    nbLocTimeout: "Getting your location took too long. Please try again.", nbLocError: "Something went wrong reading your location. Please try again.",
+
+    // ---- shopkeeper: delivery & location settings
+    ssTitle: "Delivery and location",
+    ssIntro: "Customers see your shop as delivering to them in Nearby only after you set its location and delivery here.",
+    ssOpen: "Shop is open now", ssDelivery: "We offer home delivery", ssPaused: "Pause delivery for now",
+    ssRadius: "Delivery distance (km)", ssFee: "Delivery charge (Rs)", ssMin: "Minimum order (Rs)", ssPrep: "Preparation time (minutes)",
+    ssUseGps: "Set shop location", ssGpsHint: "Press this while standing inside your shop so the location is accurate.",
+    ssLocSet: "Shop location is set", ssLocNotSet: "Shop location is not set yet", ssLocating: "Finding location…",
+    ssAccuracy: "Accuracy about {n} m", ssSave: "Save", ssSaved: "Saved.", ssNeedLoc: "Set the shop location before turning delivery on.",
+    ssBadRadius: "Delivery distance must be between 0.5 and 50 km.", ssBadFee: "Delivery charge must be between 0 and 500.",
+    ssBadMin: "Minimum order must be between 0 and 10000.", ssBadPrep: "Preparation time must be a whole number from 0 to 240 minutes.",
   }
 };
 

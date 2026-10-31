@@ -11,6 +11,10 @@ import { CATEGORIES, catLabel, catImg } from "../../shared/config/categories.js"
 const CHIPS = [{ id: "all", en: "Sab" }, ...CATEGORIES];
 const $ = (id) => document.getElementById(id);
 
+let externalOpen = null;
+/** Open a shop ({ id, name, ... }) in the items view from another screen (Nearby). No-op until initBrowse() has run. */
+export function openShopFromOutside(shop) { if (externalOpen) externalOpen(shop); }
+
 export async function initBrowse() {
   let shops = [];
   let cat = "all";
@@ -113,6 +117,7 @@ export async function initBrowse() {
     });
   }
 
+  externalOpen = openShop;
   $("shop-search").oninput = showShops;
   $("product-search").oninput = showProducts;
   $("back-btn").onclick = () => {

@@ -95,3 +95,7 @@
 .nb-skel-w90 { width:90%; } .nb-skel-w60 { width:60%; } .nb-skel-w40 { width:40%; }
 @keyframes nb-shimmer { to { background-position:-200% 0; } }
 @media (prefers-reduced-motion: reduce) { .nb-skel-line { animation:none; } }
+
+/* map not built yet (mapStatus "off"): list only, full width */
+.nb-mapcol.is-off { display:none !important; }
+.nb-layout:has(.nb-mapcol.is-off) { grid-template-columns:1fr !important; }
