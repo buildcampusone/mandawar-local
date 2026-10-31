@@ -49,7 +49,7 @@ const STRINGS = {
     logout: "लॉगआउट", user: "यूज़र",
 
     // ---- admin: delivery partners
-    navRiders: "डिलीवरी पार्टनर", shRiders: "राइडर", roleDelivery: "राइडर", navRiderJobs: "डिलीवरी ऑर्डर", shRiderJobs: "डिलीवरी",
+    navRiders: "डिलीवरी पार्टनर", shRiders: "राइडर", navMoney: "कमीशन व ऑर्डर", shMoney: "पैसा", navEarnings: "मेरी कमाई", shEarnings: "कमाई", roleDelivery: "राइडर", navRiderJobs: "डिलीवरी ऑर्डर", shRiderJobs: "डिलीवरी",
     rdTitle: "डिलीवरी पार्टनर", rdSub: "फ़ोन नंबर या नाम से यूज़र ढूँढें और राइडर बनाएं।",
     rdTabSearch: "ढूँढें", rdTabRiders: "मौजूदा राइडर",
     rdSearchPh: "10 अंकों का फ़ोन या नाम", rdSearchBtn: "ढूँढें", rdSearching: "ढूँढ रहे हैं...",
@@ -191,7 +191,7 @@ const STRINGS = {
     logout: "Logout", user: "User",
 
     // ---- admin: delivery partners
-    navRiders: "Delivery Partners", shRiders: "Riders", roleDelivery: "Rider", navRiderJobs: "Deliveries", shRiderJobs: "Deliveries",
+    navRiders: "Delivery Partners", shRiders: "Riders", navMoney: "Commission & Orders", shMoney: "Money", navEarnings: "My Earnings", shEarnings: "Earnings", roleDelivery: "Rider", navRiderJobs: "Deliveries", shRiderJobs: "Deliveries",
     rdTitle: "Delivery partners", rdSub: "Find a user by phone number or name and make them a rider.",
     rdTabSearch: "Search", rdTabRiders: "Current riders",
     rdSearchPh: "10-digit phone or name", rdSearchBtn: "Search", rdSearching: "Searching...",

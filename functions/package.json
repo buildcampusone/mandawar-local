@@ -2,9 +2,11 @@
   "name": "mandawar-functions",
   "private": true,
   "main": "index.js",
-  "engines": { "node": "22" },
+  "engines": {
+    "node": "22"
+  },
   "scripts": {
-    "test": "node --test test/restore-stock.test.js test/commission.test.js test/roles.test.js test/delivery-admin.test.js test/abuse.test.js",
+    "test": "node --test test/*.test.js",
     "serve": "firebase emulators:start --only functions,firestore,auth",
     "deploy": "firebase deploy --only functions"
   },

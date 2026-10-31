@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+  <script src="./shared/services/safe-area.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#006B35">
@@ -47,6 +48,11 @@
       <div id="order-list"></div>
     </section>
 
+    <section id="earnings-section" data-panel="earnings" hidden>
+      <h2>Meri kamai</h2>
+      <div id="earnings-body">Loading...</div>
+    </section>
+
     <section id="products-section" data-panel="products" hidden>
       <h2>Mere products</h2>
       <form id="product-form" style="max-width:420px">
@@ -68,6 +74,7 @@
     import { initShop } from "./modules/shopkeeper/shop-register.js";
     import { initProducts } from "./modules/shopkeeper/products.js";
     import { initOrders } from "./modules/shopkeeper/orders.js";
+    import { initEarnings } from "./modules/shopkeeper/earnings.js";
     import { initShopSettings } from "./modules/shopkeeper/shop-settings.js";
     const $ = (id) => document.getElementById(id);
     const STATUS = { pending: "Approval pending", approved: "Approved", rejected: "Reject hui" };
@@ -80,15 +87,16 @@
       $("welcome").textContent = "Namaste, " + profile.name;
       const shop = await initShop(user, profile);
       const approved = !!shop && shop.status === "approved";
-      if (approved) { initProducts(user); initOrders(user); initShopSettings(user, shop); }
+      if (approved) { initProducts(user); initOrders(user); initEarnings(user); initShopSettings(user, shop); }
 
       mountShell({
         role: "shopkeeper", user, profile,
         initial: approved ? "orders" : "shop",
-        locked: approved ? [] : ["orders", "products"], lockedTo: "shop",
+        locked: approved ? [] : ["orders", "products", "earnings"], lockedTo: "shop",
         items: [
           { id: "orders",   icon: "orders",   key: "navShopOrders", shortKey: "shOrders" },
           { id: "products", icon: "products", key: "navProducts", shortKey: "shProducts" },
+          { id: "earnings", icon: "orders",   key: "navEarnings", shortKey: "shEarnings" },
           { id: "shop",     icon: "shop",     key: "navMyShop",  shortKey: "shShop" }
         ],
         profileRows: () => shop ? [

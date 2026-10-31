@@ -1,4 +1,5 @@
 :root {
+  --safe-top: env(safe-area-inset-top, 0px); /* shared/services/safe-area.js raises it on edge-to-edge phones */
   color-scheme: light dark;
   /* ===== Mandawar brand colours (single source of truth) ===== */
   --primary:#006B35;        /* Primary Green   */

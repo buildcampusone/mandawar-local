@@ -95,3 +95,11 @@ set field `role` to "admin" (rules block admin self-signup on purpose).
 **Deploy:** `firebase deploy --only firestore:rules,firestore:indexes,functions,hosting`
 
 **Not tested here:** the sandbox has no firebase-tools / emulator and no internet, so the rules (including the new shop-open check) and the real OTP and App Check flows have only been reviewed, not run. Pure logic (OTP guard, abuse guard, commission, cart, events) is unit-tested.
+
+
+## Step 11: order expiry, push, settlements, blocking (new)
+1. `firebase deploy --only firestore:rules,firestore:indexes,functions` (the new index `orders: status + createdAt` takes a few minutes to build; `expireStaleOrdersJob` needs the Blaze plan + Cloud Scheduler).
+2. **Push**: Console -> Project settings -> Cloud Messaging -> Web Push certificates -> Generate key pair. Paste the public key into `VAPID_KEY` in `shared/config/firebase.js`, redeploy hosting. Shopkeepers/riders/customers tap "Alerts chalu karein" once. iPhone needs the app added to the Home Screen.
+3. **Commission**: Admin panel -> "Commission & Orders" -> set the rate. Until you do, commission is 0 %. When a shop pays you, press "Payment mila (settle)".
+4. **Abuse / cost safety (do these in the Console, code cannot do them)**: App Check (reCAPTCHA v3) -> paste the site key in `APP_CHECK_SITE_KEY`, run for a few days, then set `ENFORCE_APP_CHECK=1` in `functions/.env`; Authentication -> Settings -> SMS region policy = India only; set a billing budget alert; Google Cloud Console -> Credentials -> restrict the browser API key to your site's domain.
+5. CSP is still `Report-Only`. Watch the reports, then rename the header to `Content-Security-Policy` in `firebase.json`.

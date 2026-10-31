@@ -7,7 +7,7 @@
 .hero { position:relative; flex:1 1 auto; min-height:220px; margin:0; padding:0; border-radius:0; box-shadow:none; color:#fff; overflow:hidden;
   background:#006B35 url(../../assets/brand/hero.jpg) 50% 55%/cover no-repeat; container-type:size; }
 .hero::after { display:none; }
-.hero-top { position:absolute; z-index:3; left:16px; right:16px; top:max(14px,env(safe-area-inset-top)); display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.hero-top { position:absolute; z-index:3; left:16px; right:16px; top:max(14px,var(--safe-top)); display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .hb { display:grid; line-height:1.1; }
 .hb-name { font-size:1.35rem; font-weight:800; letter-spacing:.01em; text-shadow:0 2px 10px rgba(0,40,20,.35); }
 .hb-tag { margin-top:2px; font-size:.62rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--primary-soft); }

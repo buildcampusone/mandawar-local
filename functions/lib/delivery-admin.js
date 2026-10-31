@@ -46,7 +46,7 @@ async function changeDeliveryRole({ db, actorUid, targetUid, makeDelivery, now }
 }
 
 // Whitelisted shape: nothing but uid/name/phone/role ever leaves the server.
-const publicUser = (d) => ({ uid: d.id, name: str(d.data().name), phone: str(d.data().phone), role: str(d.data().role) });
+const publicUser = (d) => ({ uid: d.id, name: str(d.data().name), phone: str(d.data().phone), role: str(d.data().role), status: str(d.data().status) });
 
 // parsed = result of parseSearchQuery(). Phone = exact match. Name = prefix match (case-sensitive in
 // Firestore), so we also try the first-letter-capitalised form. Max 20 rows.

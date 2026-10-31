@@ -9,7 +9,8 @@ service cloud.firestore {
     function isRole(r) {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == r;
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == r
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('status', 'active') == 'active';
     }
 
     function shopStatus(shopId) {
@@ -90,6 +91,8 @@ service cloud.firestore {
         && request.resource.data.role in ['customer','shopkeeper']
         && request.resource.data.status == 'active'
         && request.resource.data.createdAt == request.time
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 60
         && request.resource.data.phone is string
         && request.resource.data.phone.matches('^[6-9][0-9]{9}$')
         && ownsPhone(request.resource.data.phone);
@@ -100,6 +103,8 @@ service cloud.firestore {
         && request.resource.data.status == resource.data.status
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.keys().hasOnly(['name','phone','role','status','createdAt','address'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 60
         && (request.resource.data.phone == resource.data.phone || ownsPhone(request.resource.data.phone))
         && (!('address' in request.resource.data)
             || (request.resource.data.address is string
@@ -275,7 +280,8 @@ service cloud.firestore {
             && resource.data.status == 'placed'
             && request.resource.data.status in ['accepted','rejected'])
           || (resource.data.customerUid == request.auth.uid
-            && resource.data.status == 'placed'
+            && resource.data.status in ['placed', 'accepted']
+            && !('deliveryBoyId' in resource.data)
             && request.resource.data.status == 'cancelled')
         );
 
@@ -290,6 +296,17 @@ service cloud.firestore {
         && request.resource.data.deliveryBoyId == request.auth.uid
         && request.resource.data.riderName == profileOf(request.auth.uid).name
         && request.resource.data.riderPhone == profileOf(request.auth.uid).phone;
+
+      // Rider hands the order back (cannot deliver / vehicle problem): status -> accepted, rider fields removed.
+      allow update: if isRole('delivery')
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','deliveryBoyId','riderName','riderPhone'])
+        && resource.data.get('deliveryBoyId', '') == request.auth.uid
+        && resource.data.status == 'out_for_delivery'
+        && request.resource.data.status == 'accepted'
+        && !('deliveryBoyId' in request.resource.data)
+        && !('riderName' in request.resource.data)
+        && !('riderPhone' in request.resource.data);
 
       // Only the rider who holds the order can mark it delivered.
       allow update: if isRole('delivery')
@@ -369,11 +386,34 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // settlements (shop paid commission) are written only by the recordSettlement function.
+    match /settlements/{sid} {
+      allow read: if signedIn() && (resource.data.shopId == request.auth.uid || isRole('admin'));
+      allow write: if false;
+    }
+
+    // platform config (commission %): admin may read, only the setCommissionRate function writes.
+    match /config/{cid} {
+      allow read: if isRole('admin');
+      allow write: if false;
+    }
+
+    // FCM token of this user's device, used by the push functions (functions read it with the Admin SDK).
+    match /pushTokens/{uid} {
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['token','updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() >= 20 && request.resource.data.token.size() <= 4096
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow read: if false;
+    }
+
     match /feedback/{fid} {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['uid','role','rating','comment','lang','createdAt'])
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.role in ['customer','shopkeeper','admin']
+        && request.resource.data.role in ['customer','shopkeeper','delivery','admin']
         && request.resource.data.rating is int
         && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
         && request.resource.data.comment is string

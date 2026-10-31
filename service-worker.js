@@ -7,7 +7,7 @@
 //    and bump VERSION when you want everyone's cache rebuilt.
 importScripts("./shared/services/sw-routes.js");
 
-const VERSION = "mandawar-v4";
+const VERSION = "mandawar-v6";
 const NAV_TIMEOUT_MS = 5000;   // slow network + cached page -> show the cached page
 const ASSET_TIMEOUT_MS = 8000;
 
@@ -24,6 +24,7 @@ const PRECACHE = [
   "./manifest.json",
   "./modules/admin/delivery-partners-core.js",
   "./modules/admin/delivery-partners.js",
+  "./modules/admin/money.js",
   "./modules/admin/shops.js",
   "./modules/auth/i18n.js",
   "./modules/auth/login-visual.js",
@@ -42,6 +43,7 @@ const PRECACHE = [
   "./modules/customer/order-alerts.js",
   "./modules/customer/rate-order.js",
   "./modules/delivery/jobs.js",
+  "./modules/shopkeeper/earnings.js",
   "./modules/shopkeeper/orders.js",
   "./modules/shopkeeper/products.js",
   "./modules/shopkeeper/shop-register.js",
@@ -65,6 +67,8 @@ const PRECACHE = [
   "./shared/services/order-events.js",
   "./shared/services/otp-guard.js",
   "./shared/services/phone-core.js",
+  "./shared/services/push.js",
+  "./shared/services/safe-area.js",
   "./shared/services/pwa.js",
   "./shared/services/sw-routes.js",
   "./shared/styles/category-showcase.css",
@@ -150,6 +154,18 @@ self.addEventListener("fetch", (event) => {
       : strategy === "cache-first" ? cacheFirst(r)
       : staleWhileRevalidate(r)
   );
+});
+
+// Push from Firebase Cloud Messaging (data-only message: title/body/tag/url) while the app is closed or in the background.
+self.addEventListener("push", (event) => {
+  let d = {};
+  try { const p = event.data ? event.data.json() : {}; d = p.data || p.notification || p || {}; } catch (e) { d = {}; }
+  if (!d.title) return;
+  event.waitUntil(self.registration.showNotification(d.title, {
+    body: d.body || "", tag: d.tag || undefined, renotify: !!d.tag,
+    icon: "./assets/icons/icon-192.png", badge: "./assets/icons/favicon-32.png",
+    vibrate: [120, 60, 120], data: { url: d.url || "./" }
+  }));
 });
 
 // Tapping a system notification brings the app to the front (or opens it).

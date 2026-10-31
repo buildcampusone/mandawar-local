@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
+  <script src="./shared/services/safe-area.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#006B35">
@@ -34,6 +35,9 @@
       <h2>Sabhi dukaanein</h2>
       <div id="all-list"></div>
     </section>
+    <section data-panel="money">
+      <div id="money-root"></div>
+    </section>
     <section data-panel="riders">
       <div id="riders-root"></div>
     </section>
@@ -42,6 +46,7 @@
     import { requireRole, logOut } from "./shared/services/auth.js";
     import { mountShell } from "./shared/components/shell.js";
     import { loadPendingShops, loadAllShops } from "./modules/admin/shops.js";
+    import { loadMoney } from "./modules/admin/money.js";
     import { loadDeliveryPartners } from "./modules/admin/delivery-partners.js";
     const $ = (id) => document.getElementById(id);
 
@@ -52,13 +57,15 @@
         items: [
           { id: "pending", icon: "pending", key: "navPending",  shortKey: "shPending" },
           { id: "shops",   icon: "shops",   key: "navAllShops", shortKey: "shShops" },
-          { id: "riders",  icon: "rider",   key: "navRiders",   shortKey: "shRiders" }
+          { id: "riders",  icon: "rider",   key: "navRiders",   shortKey: "shRiders" },
+          { id: "money",   icon: "orders",  key: "navMoney",    shortKey: "shMoney" }
         ],
         onLogout: async () => { await logOut(); location.href = "./login.html"; },
         onEnter: (id) => {
           if (id === "pending") loadPendingShops($("pending-list"));
           if (id === "shops") loadAllShops($("all-list"));
           if (id === "riders") loadDeliveryPartners($("riders-root"));
+          if (id === "money") loadMoney($("money-root"));
         }
       });
     });

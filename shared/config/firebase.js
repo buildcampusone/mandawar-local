@@ -25,6 +25,8 @@ if (APP_CHECK_SITE_KEY) {
   const ac = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js");
   ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(APP_CHECK_SITE_KEY), isTokenAutoRefreshEnabled: true });
 }
+// Web Push key pair (public key) from Firebase Console -> Cloud Messaging -> Web Push certificates. Empty = push off.
+export const VAPID_KEY = "";
 export const auth = getAuth(app);
 // Local (IndexedDB) cache so shops, products and past orders still open when the network drops.
 // Orders themselves are blocked while offline (modules/customer/checkout.js). Cache is wiped on logout (auth.js).

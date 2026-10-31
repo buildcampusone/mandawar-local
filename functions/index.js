@@ -15,6 +15,11 @@ const { shouldRecord, recordCommissionForOrder } = require("./lib/commission");
 const { parseSearchQuery, httpsCodeFor } = require("./lib/roles");
 const { isAdmin, changeDeliveryRole, findUsers, listRiders } = require("./lib/delivery-admin");
 const { enforceOrderLimits } = require("./lib/abuse");
+const { sweepStaleOrders } = require("./lib/expiry");
+const ops = require("./lib/admin-ops");
+const { pushForCreate, pushForUpdate } = require("./lib/push");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
 
@@ -102,4 +107,59 @@ exports.findUserByPhone = onCall(ADMIN_CALL, async (request) => {
 exports.listDeliveryPartners = onCall(ADMIN_CALL, async (request) => {
   await requireAdmin(request, "listDeliveryPartners");
   return { riders: await listRiders({ db: getFirestore() }) };         // max 50, uid/name/phone/status
+});
+
+// ---- Stale orders: nobody may stay stuck forever -------------------------------------------------
+exports.expireStaleOrdersJob = onSchedule({ schedule: "every 5 minutes", region: "asia-south1", timeZone: "Asia/Kolkata", maxInstances: 1 }, async () => {
+  const res = await sweepStaleOrders({ db: getFirestore() });
+  if (res.cancelled) logger.info("expireStaleOrdersJob", res);
+});
+
+// ---- Admin: cancel stuck order, block users, commission rate, settlements -------------------------
+function adminCallable(name, run) {
+  return onCall(ADMIN_CALL, async (request) => {
+    const uid = await requireAdmin(request, name);
+    const data = request.data && typeof request.data === "object" ? request.data : {};
+    const res = await run({ db: getFirestore(), actorUid: uid, data, now: () => FieldValue.serverTimestamp() });
+    if (!res.ok) throw new HttpsError(ops.httpsCode(res.code), res.message, { reason: res.code });
+    logger.info(name, { actor: uid });
+    return res;
+  });
+}
+exports.adminCancelOrder = adminCallable("adminCancelOrder", ({ data, ...r }) => ops.cancelOrderTx({ ...r, orderId: data.orderId, reason: data.reason }));
+exports.setUserStatus = adminCallable("setUserStatus", ({ data, ...r }) => ops.setUserStatusTx({ ...r, targetUid: data.uid, status: data.status }));
+exports.setCommissionRate = adminCallable("setCommissionRate", ({ data, ...r }) => ops.setRateTx({ ...r, percent: data.percent }));
+exports.recordSettlement = adminCallable("recordSettlement", ({ data, ...r }) => ops.settleTx({ ...r, shopId: data.shopId, amountPaise: data.amountPaise, memo: data.memo }));
+
+// ---- Push notifications (works with the app CLOSED). Tokens live in pushTokens/{uid} (client: shared/services/push.js).
+async function sendPush(items) {
+  const db = getFirestore();
+  for (const it of items) {
+    let uids = [];
+    if (it.target === "riders") {
+      const s = await db.collection("users").where("role", "==", "delivery").limit(50).get();
+      uids = s.docs.map((d) => d.id);
+    } else if (typeof it.uid === "string" && it.uid) uids = [it.uid];
+    if (!uids.length) continue;
+    const snaps = await Promise.all(uids.map((u) => db.collection("pushTokens").doc(u).get()));
+    const rows = snaps.filter((s) => s.exists && typeof s.data().token === "string").map((s) => ({ uid: s.id, token: s.data().token }));
+    if (!rows.length) continue;
+    // data-only message: the service worker shows it (see service-worker.js "push" handler)
+    const res = await getMessaging().sendEachForMulticast({
+      tokens: rows.map((r) => r.token),
+      data: { title: it.title, body: it.body || "", tag: it.tag || "", url: "./" },
+      webpush: { headers: { Urgency: "high", TTL: "3600" } }
+    });
+    await Promise.all(res.responses.map((r, i) => (!r.success && r.error && /registration-token-not-registered|invalid-argument|invalid-registration/.test(r.error.code || ""))
+      ? db.collection("pushTokens").doc(rows[i].uid).delete().catch(() => {}) : null));
+  }
+}
+exports.pushOnOrderCreated = onDocumentCreated("orders/{orderId}", async (event) => {
+  try { await sendPush(pushForCreate(event.data && event.data.data(), event.params.orderId)); }
+  catch (e) { logger.warn("pushOnOrderCreated failed", { err: String(e) }); }
+});
+exports.pushOnOrderUpdated = onDocumentUpdated("orders/{orderId}", async (event) => {
+  try {
+    await sendPush(pushForUpdate(event.data && event.data.before.data(), event.data && event.data.after.data(), event.params.orderId));
+  } catch (e) { logger.warn("pushOnOrderUpdated failed", { err: String(e) }); }
 });

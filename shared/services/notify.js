@@ -1,6 +1,6 @@
 // In-app alerts: toast + short beep + vibration + (if allowed and the tab is hidden) a system notification.
 // This works while the app is open or in the background. Real push to a CLOSED app needs Firebase Cloud
-// Messaging (VAPID key + a sender function) and is not part of this module.
+// Messaging: see shared/services/push.js (needs VAPID_KEY) and the push functions in functions/index.js.
 import { toast } from "../components/toast.js";
 
 const supported = () => typeof Notification !== "undefined";
@@ -8,8 +8,10 @@ export const permission = () => (supported() ? Notification.permission : "unsupp
 
 export async function requestPermission() {
   if (!supported() || Notification.permission !== "default") return permission();
-  try { return await Notification.requestPermission(); } catch (e) { return permission(); }
+  try { const r = await Notification.requestPermission(); if (r === "granted") registerPush(); return r; } catch (e) { return permission(); }
 }
+// register this device for push (no-op without VAPID_KEY); never blocks or throws
+function registerPush() { import("./push.js").then((m) => m.syncPush()).catch(() => {}); }
 
 // Browsers only allow sound after a tap, so the audio context is created on the first touch/click.
 let ctx = null;
@@ -59,8 +61,9 @@ export function setPendingBadge(n) { document.title = (n > 0 ? "(" + n + ") " : 
 export function notifyPrompt() {
   const box = document.createElement("div");
   box.className = "np";
+  if (permission() === "granted") registerPush();   // refresh the token on every visit
   const txt = document.createElement("span");
-  txt.textContent = "Order alerts chahiye? App khula ho tab phone par notification aayega.";
+  txt.textContent = "Order alerts chahiye? Band app par bhi naya order / update ki notification aayegi.";
   const b = document.createElement("button");
   b.type = "button"; b.className = "category"; b.textContent = "Alerts chalu karein";
   b.onclick = async () => { b.disabled = true; await requestPermission(); box.hidden = permission() !== "default"; b.disabled = false; };

@@ -1,34 +1,23 @@
 # Mandawar
 
-**Mandawar - Your Local Marketplace.** A mobile-first marketplace for every kind of local shop in Mandawar, Dausa, Rajasthan (kirana, dairy, medical, clothes, electronics, salon ...).
+**Mandawar - Your Local Marketplace.** A mobile-first marketplace for every kind of local shop in Mandawar, Dausa, Rajasthan.
 
 ## Stack
-- HTML5
-- CSS3
-- Vanilla JavaScript ES Modules
-- Firebase (planned)
+HTML5, CSS3, vanilla JavaScript ES Modules, Firebase (Auth + Phone OTP + Firestore + Cloud Functions + Hosting + FCM push).
 
 ## Roles
-- Customer
-- Shopkeeper
-- Delivery partner
-- Admin
+Customer, Shopkeeper, Delivery partner (rider), Admin (admin is created by hand in the Console: set `users/{uid}.role = "admin"`).
 
-## Current phase
-Phase 1: UI foundation and project structure.
+## What works today
+COD orders with live status, stock handling, delivery fee / minimum order, rider claim + hand-back, order expiry (15 min no answer, 30 min no rider), customer cancel before a rider takes it, push notifications (needs `VAPID_KEY`), commission ledger + wallet, shopkeeper earnings screen, admin: shop approval, riders, commission rate, settlements, cancel stuck order, block / unblock users. Online payment (Razorpay) is NOT built yet.
 
-## Important
-No live orders, authentication or payment processing is enabled yet.
+## Tests
+- `cd functions && npm test` (Cloud Functions logic)
+- `node --test tests/*.mjs` (browser logic)
+- `cd rules-tests && npm i && npm test` (Firestore rules, needs the emulator)
 
 ## Structure notes
-- `shared/config/categories.js` - ONE list of shop categories (login animation, filters, register form, home). If you add one, also add its id to `firestore.rules` (shops.create) and redeploy rules.
-- `shared/styles/tokens.css` - ONE green colour system for every page.
-- `shared/components/shell.js` + `shell.css` - sidebar + profile used by customer, shopkeeper and admin panels. Sections opt in with `data-panel="viewId"`.
-- `assets/images/categories/*.webp` - real photo for each shop category (file name set per category in `categories.js` as `img`). Used on home tiles, filter chips and the login animation.
-
-## Brand (official name: **Mandawar**, tagline: *Your Local Marketplace*)
-- Never use "Mandawar Local" or "Mandawar Mart". Brand strings live in `shared/config/brand.js` (JS) and are repeated in the static HTML heads/headers.
-- Colours: `shared/styles/tokens.css` (#006B35 primary, #008D49 secondary, #00A45B fresh, #EBF6EE light, #F7FAF7 background, #FFC83D accent, #14251C text).
-- Assets: `assets/brand/` (mark, logo, hero, splash, og-image), `assets/icons/` (PWA, maskable, apple-touch, favicons), `favicon.ico`.
-- Splash: `shared/components/splash.js` (once per session) uses the same artwork as the login hero and the PWA/iOS launch images, so launch -> splash -> login is one continuous scene.
-- Social sharing: `og:image` in `index.html` is relative; change it to your full https URL after deploying.
+- `shared/config/categories.js` - ONE list of shop categories. If you add one, also add its id to `firestore.rules` (shops.create).
+- `shared/styles/tokens.css` - ONE green colour system. `shared/components/shell.js` - sidebar used by all panels (`data-panel="viewId"`).
+- Brand: official name **Mandawar**, tagline *Your Local Marketplace*; strings in `shared/config/brand.js`.
+- Setup and deploy steps: `DEPLOY.md`.

@@ -120,11 +120,11 @@ test("removing a rider with an out_for_delivery order is rejected, role and audi
   assert.equal(audits(db).length, 0);
 });
 
-test("findUsers: phone is exact, returns only uid/name/phone/role", async () => {
+test("findUsers: phone is exact, returns only uid/name/phone/role/status", async () => {
   const s = seed(); s["users/cust1"].secret = "x"; s["users/cust1"].address = "home";
   const db = fakeDb(s);
   const out = await findUsers({ db, parsed: { type: "phone", value: "9876543210" } });
-  assert.deepEqual(out, [{ uid: "cust1", name: "Ram Lal", phone: "9876543210", role: "customer" }]);
+  assert.deepEqual(out, [{ uid: "cust1", name: "Ram Lal", phone: "9876543210", role: "customer", status: "active" }]);
 });
 
 test("findUsers: name prefix, also matches when typed in lower case, capped at 20", async () => {
