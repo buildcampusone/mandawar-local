@@ -7,7 +7,7 @@
 //    and bump VERSION when you want everyone's cache rebuilt.
 importScripts("./shared/services/sw-routes.js");
 
-const VERSION = "mandawar-mart-v5";   // v5: new logo + colours; v4: owner dashboard (Phase 6)
+const VERSION = "mandawar-mart-v7";   // v7: Categories screen; v6: new customer home design (mart.css, product-grid.js); v5: new logo + colours; v4: owner dashboard (Phase 6)
 const NAV_TIMEOUT_MS = 5000;   // slow network + cached page -> show the cached page
 const ASSET_TIMEOUT_MS = 8000;
 
@@ -47,6 +47,8 @@ const PRECACHE = [
   "./modules/auth/login.js",
   "./modules/customer/address.js",
   "./modules/customer/browse.js",
+  "./modules/customer/categories-core.js",
+  "./modules/customer/categories-view.js",
   "./modules/customer/cart-core.js",
   "./modules/customer/cart-view.js",
   "./modules/customer/cart.js",

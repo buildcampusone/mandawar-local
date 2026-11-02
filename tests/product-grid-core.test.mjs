@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  sortProducts, groupProducts, filterProducts, discountInfo, badgeFor, addCheck, cartSummary, DEFAULT_GROUP
+  sortProducts, groupProducts, filterProducts, discountInfo, addCheck, cartSummary, DEFAULT_GROUP
 } from "../modules/customer/product-grid-core.js";
 
 const P = (o) => ({ id: o.name, price: 20, unit: "packet", stock: 10, active: true, ...o });
@@ -46,15 +46,6 @@ test("discountInfo needs mrp above price", () => {
   assert.equal(discountInfo({ price: 30, mrp: 29 }), null);
   assert.equal(discountInfo({ price: 20 }), null);
   assert.equal(discountInfo({ price: 99.8, mrp: 100 }), null);   // under 1% is not shown
-});
-
-test("badgeFor: discount rotates, sold out and low stock are flagged, plain items have none", () => {
-  const d = P({ name: "d", price: 22, mrp: 29 });
-  assert.deepEqual(badgeFor(d, 0), { label: "Discount", value: "24% OFF", tone: "good" });
-  assert.deepEqual(badgeFor(d, 1), { label: "You Save", value: "₹7", tone: "good" });
-  assert.equal(badgeFor(P({ name: "x", stock: 0 })).label, "Stock khatam");
-  assert.equal(badgeFor(P({ name: "x", stock: 3 })).label, "Sirf 3 bache");
-  assert.equal(badgeFor(P({ name: "x" })), null);
 });
 
 test("addCheck respects stock and max quantity", () => {

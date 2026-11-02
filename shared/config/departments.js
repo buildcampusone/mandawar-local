@@ -25,15 +25,6 @@ export const DEFAULT_DEPARTMENTS = [
   { id: "cleaning-products", name: "Cleaning Products" }
 ];
 
-// Tile icons for the customer home (not stored in Firestore). New departments the owner adds get the basket.
-const EMOJI = {
-  "fruits-vegetables": "🥦", "dairy-bread-eggs": "🥛", "atta-flour": "🌾", "rice-grains": "🍚", "dal-pulses": "🫘",
-  "oil-ghee": "🫙", "masala-spices": "🌶️", "dry-fruits-nuts": "🥜", "snacks-namkeen": "🍿", "biscuits-bakery": "🍪",
-  "tea-coffee": "☕", "sugar-salt": "🧂", "packaged-foods": "📦", "beverages": "🧃", "personal-care": "🧴",
-  "household-essentials": "🏠", "cleaning-products": "🧽"
-};
-export const deptEmoji = (id) => EMOJI[id] || "🛒";
-
 export const NAME_MIN = 2, NAME_MAX = 30;   // same limits as firestore.rules (categories)
 
 export function cleanName(v) {

@@ -51,6 +51,7 @@
           <input id="product-search" type="search" data-i18n-ph="hmSearch" data-i18n-aria="hmSearchAria" autocomplete="off">
           <button class="mart-mic" id="mic-btn" type="button" data-i18n-aria="hmVoice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
         </div>
+        <nav class="mart-tabs" id="mart-tabs" data-i18n-aria="hmTabsAria" hidden></nav>
       </div>
       <div class="mart-promo" id="mart-promo" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>
@@ -69,6 +70,8 @@
       </section>
     </section>
 
+
+    <section id="categories-view" data-panel="categories"></section>
 
     <section id="cart-view" data-panel="cart" hidden>
       <button class="category" id="cart-back" type="button">Wapas</button>
@@ -100,6 +103,7 @@
     import { requireRole, logOut } from "./shared/services/auth.js";
     import { mountShell } from "./shared/components/shell.js";
     import { t } from "./shared/i18n/i18n.js";
+    import { initCategories } from "./modules/customer/categories-view.js";
     import { initBrowse } from "./modules/customer/browse.js";
     import { initAddress } from "./modules/customer/address.js";
     import { initCartView } from "./modules/customer/cart-view.js";
@@ -113,6 +117,7 @@
       initAddress(user, profile);
       initCartView(user, profile, { onPlaced: () => shell.go("orders") });
       const browse = initBrowse(user, profile);
+      const cats = initCategories(profile, { onOpen: (key) => { shell.go("home"); setTimeout(() => window.dispatchEvent(new CustomEvent("mart-open", { detail: key })), 150); } });
       const refreshOrders = initMyOrders(user, { onReorder: () => shell.go("cart") });
       $("orders-section").insertBefore(notifyPrompt(), $("my-order-list"));
       startOrderAlerts(user, { onChange: () => { if (shell.current() === "orders") refreshOrders(); } });
@@ -121,6 +126,7 @@
         role: "customer", user, profile, initial: "home",
         items: [
           { id: "home",    icon: "home",    key: "navShops",   shortKey: "shHome" },
+          { id: "categories", icon: "grid", key: "navCategories", shortKey: "shCategories" },
           { id: "cart",    icon: "cart",    key: "navCart",    shortKey: "shCart" },
           { id: "orders",  icon: "orders",  key: "navOrders",  shortKey: "shOrders" },
           { id: "address", icon: "address", key: "navAddress" }
@@ -133,6 +139,7 @@
             browse.showHome();
             $("cart-view").hidden = true;
           }
+          if (id === "categories") { $("cart-view").hidden = true; cats.refresh(); }
           if (id === "cart") $("cart-btn").click();
           if (id === "orders") refreshOrders();
         }

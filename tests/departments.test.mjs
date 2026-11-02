@@ -2,20 +2,18 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_DEPARTMENTS, slugify, cleanName, nameProblem, sortDepartments, activeDepartments,
-  nextOrder, moveDepartment, missingDefaults, deptEmoji, STORE_ID
+  nextOrder, moveDepartment, missingDefaults, STORE_ID
 } from "../shared/config/departments.js";
 
 const D = (id, order, extra = {}) => ({ id, name: id.toUpperCase(), order, active: true, ...extra });
 
-test("17 default grocery departments, unique ids, ids are clean slugs, every one has a tile icon", () => {
+test("17 default grocery departments, unique ids, ids are clean slugs", () => {
   assert.equal(DEFAULT_DEPARTMENTS.length, 17);
   assert.equal(new Set(DEFAULT_DEPARTMENTS.map((d) => d.id)).size, 17);
   for (const d of DEFAULT_DEPARTMENTS) {
     assert.equal(slugify(d.name), d.id, d.name);
     assert.ok(d.name.length >= 2 && d.name.length <= 30, d.name);
-    assert.notEqual(deptEmoji(d.id), "🛒", d.id + " has no emoji");
   }
-  assert.equal(deptEmoji("owner-added"), "🛒");
   assert.equal(STORE_ID, "main");
 });
 

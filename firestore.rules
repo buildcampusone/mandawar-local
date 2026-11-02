@@ -1,4 +1,7 @@
 rules_version = '2';
+// Mandawar Mart - Firestore rules (audited 1 Nov 2026 against every read/write in modules/, shared/ and functions/).
+// Changes vs the previous file are marked "AUDIT FIX". Everything else is unchanged on purpose: the order + stock
+// batch (checkout.js) is the most sensitive part of the app, so it was NOT touched.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -47,6 +50,14 @@ service cloud.firestore {
     }
     function profileOf(uid) {
       return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    // AUDIT FIX: documents added by hand in the Console (the owner is told to add banners that way) may have no createdAt.
+    // `x.createdAt == y.createdAt` then raises an error and the owner can never pause / reorder / edit that document.
+    // Comparing with get(..., null) keeps the same protection (a real createdAt can never be changed or invented by the
+    // app: null != timestamp) but does not fail on a missing field.
+    function sameCreated(n, o) {
+      return n.get('createdAt', null) == o.get('createdAt', null);
     }
 
     function validDelivery(d) {
@@ -155,7 +166,7 @@ service cloud.firestore {
 
       allow update: if isRole('admin')
         && validCategory(request.resource.data)
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && sameCreated(request.resource.data, resource.data);
 
       allow delete: if false;
     }
@@ -176,7 +187,7 @@ service cloud.firestore {
     match /banners/{bannerId} {
       allow read: if signedIn() && (resource.data.active == true || isRole('admin'));
       allow create: if isRole('admin') && validBanner(request.resource.data) && request.resource.data.createdAt == request.time;
-      allow update: if isRole('admin') && validBanner(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+      allow update: if isRole('admin') && validBanner(request.resource.data) && sameCreated(request.resource.data, resource.data);
       allow delete: if isRole('admin');
     }
 
@@ -200,7 +211,7 @@ service cloud.firestore {
       allow create: if isRole('admin') && validCoupon(request.resource.data)
         && request.resource.data.code == couponId && request.resource.data.createdAt == request.time;
       allow update: if isRole('admin') && validCoupon(request.resource.data)
-        && request.resource.data.code == couponId && request.resource.data.createdAt == resource.data.createdAt;
+        && request.resource.data.code == couponId && sameCreated(request.resource.data, resource.data);
       allow delete: if isRole('admin');
     }
 
@@ -210,7 +221,12 @@ service cloud.firestore {
 
     // Top-level products: only the owner (admin) writes them. A customer may only LOWER stock, as part of placing an order.
     match /products/{productId} {
-      allow read: if signedIn() && (resource.data.active == true || isRole('admin'));
+      // AUDIT FIX: reading ONE product by id is allowed for any signed-in user (it is public catalogue data and the ids are
+      // random), only LISTING is limited to active products (admin: all). Before, a cart / old order that pointed at a product
+      // the owner had switched off got "permission-denied": cart-view.js then showed "Cart load nahi hua" with no way to
+      // remove the item (when every cart item was switched off), and checkout.js showed the wrong error text.
+      allow get: if signedIn();
+      allow list: if signedIn() && (resource.data.active == true || isRole('admin'));
 
       allow create: if isRole('admin')
         && validProduct(request.resource.data)
@@ -220,7 +236,7 @@ service cloud.firestore {
       allow update: if isRole('admin')
         && validProduct(request.resource.data)
         && categoryOk(request.resource.data)
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && sameCreated(request.resource.data, resource.data);
 
       allow update: if signedIn()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock','lastOrderId'])

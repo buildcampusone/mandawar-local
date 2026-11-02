@@ -52,18 +52,6 @@ export function discountInfo(p) {
   return { off, save: money2(mrp - price) };
 }
 
-// Small tag under a card. mode 0 = "Discount 25% OFF", mode 1 = "You Save ₹7" (the card rotates between them).
-// -> { label, value, tone } | null
-export function badgeFor(p, mode = 0) {
-  if (!(p && p.stock > 0)) return { label: "Stock khatam", value: "", tone: "bad" };
-  const d = discountInfo(p);
-  if (d) return mode === 1
-    ? { label: "You Save", value: "₹" + fmt(d.save), tone: "good" }
-    : { label: "Discount", value: d.off + "% OFF", tone: "good" };
-  if (p.stock <= 5) return { label: "Sirf " + p.stock + " bache", value: "", tone: "warn" };
-  return null;
-}
-
 // "" when one more unit may be added, otherwise a short Hinglish reason
 export function addCheck(p, inCart, maxQty) {
   if (!(p && p.stock > 0)) return "Stock khatam ho gaya.";

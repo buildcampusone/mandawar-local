@@ -148,6 +148,13 @@ export function initProductGrid() {
     return sec;
   }
 
+  // Categories screen / its tab strip: scroll to a section key ("deals", "essentials") or a department ("d:<id>")
+  window.addEventListener("mart-open", (e) => {
+    const key = String(e.detail || "");
+    const a = anchorFor(key) || anchorFor("d:" + key);
+    if (a) a.scrollIntoView({ behavior: "smooth", block: "start" }); else toast(t("hmNoStockDept"), { ms: 2500 });
+  });
+
   // where a section key lives on the page (null when it is not shown)
   function anchorFor(key) {
     if (key === "top") return view;
